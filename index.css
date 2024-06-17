@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Finlandica:ital,wght@0,400..700;1,400..700&family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap');
+
+* {
+    font-family: "Roboto Flex", sans-serif;
+}
+
+.title {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.output-textarea {
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+}
+
+/* wwwroot/css/site.css */
+
+/* Flex container for side-by-side elements */
+.flex-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px; /* Adjust margin as needed */
+}
+
+/* Each input group within the flex container */
+.input-group {
+    flex: 1; /* Each group takes up equal space */
+    padding-right: 10px; /* Adjust padding between groups */
+}
+
+/* Style for the textareas */
+.input-textarea {
+    width: 100%; /* Full width of parent container */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    resize: vertical; /* Allow vertical resizing */
+}
+
+
+.output-textarea {
+    height: 200px;
+    background-color: #f9f9f9;
+    border-color: #ddd;
+}
+
+.button {
+    padding: 10px 20px;
+    margin: 10px 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+    .button:hover {
+        background-color: #0056b3;
+    }
+
+
+table {
+    width: 90%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 18px;
+    text-align: center;
+    font-family: "Roboto Flex", sans-serif;
+}
+
+table, th, td {
+    border: 1px solid #dddddd;
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+
+.column7 {
+    background-color: lightblue;
+}

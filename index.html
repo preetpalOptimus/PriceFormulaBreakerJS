@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Input Display</title>
+    <link rel="stylesheet" href="index.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #display {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <br />
+    <div class="flex-container">
+        <div class="input-group">
+            <h4>Currency Code</h4>
+            <textarea id="input1" class="input-textarea" placeholder="Currency Code" rows="5" cols="80"></textarea>
+        </div>
+
+        <div class="input-group">
+            <h4>Order Line</h4>
+            <textarea id="input4" class="input-textarea" placeholder="Flower Table" rows="5" cols="80" required></textarea>
+        </div>
+    </div>
+
+    <div class="flex-container">
+        <div class="input-group">
+            <h4>General Code Table</h4>
+            <textarea id="input2" class="input-textarea" placeholder="General Code Table" rows="5" cols="80"></textarea>
+        </div>
+
+        <div class="input-group">
+            <h4>Formula Code Table</h4>
+            <textarea id="input3" class="input-textarea" placeholder="Formula Code Table" rows="5" cols="80"></textarea>
+        </div>
+    </div>
+    <button class="button" onclick="processInputsAndGenerateCode()">Run</button>
+
+    <p id="table-container"></p>
+
+    <script src="index.js"></script>
+</body>
+</html>
