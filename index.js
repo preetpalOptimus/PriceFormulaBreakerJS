@@ -78,8 +78,7 @@ function processInputsAndGenerateCode() {
             return
         }
 
-        input1.value = `Currency code	Shortening	VALVERK
-1	USD	94.34
+        input1.value = `1	USD	94.34
 2	GBP	100
 4	USD	94.34
 15	EUR	89.286
@@ -88,78 +87,78 @@ function processInputsAndGenerateCode() {
 `
 
         input2.value = `3	USD to GBP	0.943
-                4	GBP to GBP	1.000
-                5	EUR to GBP	0.892
-                6	Wreath/Capiro USD to GBP	0.833
-                7	USD to EUR	1.000
-                8	Transflor - FB	6.500
-                9	Transflor - HB	4.650
-                10	Transflor - QB	3.550
-                11	Transflor - 5B	3.550
-                12	Transflor - 8B	3.550
-                13	Transflor -Morrisons Alstro	2.000
-                14	Transflor - Capiro	2.750
-                15	Freight ECU	3.150
-                16	Freight COL	2.300
-                17	Peak Freight - ECU	3.950
-                18	Peak Freight - COL	2.700
-                19	Peak Freight - Ken	3.900
-                20	Inland Transport Ecu - FB	3.500
-                21	Inland Transport Ecu - HB	3.500
-                22	Inland Transport Ecu - QB	3.500
-                23	Inland Transport Col - FB	2.600
-                24	Inland Transport Col - HB	2.600
-                25	Inland Transport Col - QB	2.600
-                26	AM	1.010
-                27	Inland Transport Ken - FB	3.500
-                28	Inland Transport Ken - HB	1.750
-                29	Inland Transport Ken - QB	1.750
-                30	Freight Absolute - Ecu	0.005
-                31	Freight Absolute - Col	0.001
-                32	Freight Absolute - Ken	0.001
-                33	Duty Percentage	1.000
-                34	DEF/PEACH Absolute - Ecu	0.002
-                35	DEF/PEACH Absolute - Col	0.001
-                36	DEF/PEACH Absolute - Ken	0.003
-                37	Clearance Absolute - Ecu	0.002
-                38	Clearance Absolute - Col	0.002
-                39	Clearance Absolute - Ken	0.014
-                40	Clearance Per Kilo - Ecu	0.220
-                41	Clearance Per Kilo - Col	0.220
-                42	Clearance Per Kilo - Ken	0.220
-                43	Inland Transport Per Kilo - Ecu	0.001
-                44	Inland Transport Per Kilo - Col	0.050
-                45	Inland Transport Per Kilo - Ken
-                46	USD Rate for Wreaths & Capiro	0.833
-                47	Freight COL - Morrisons	2.100
-                48	Transflor Capiro -HB	3.500
-                49	Inland Capiro - HB	1.300
-                50	Inland Caprio - QB	1.300`
+4	GBP to GBP	1.000
+5	EUR to GBP	0.892
+6	Wreath/Capiro USD to GBP	0.833
+7	USD to EUR	1.000
+8	Transflor - FB	6.500
+9	Transflor - HB	4.650
+10	Transflor - QB	3.550
+11	Transflor - 5B	3.550
+12	Transflor - 8B	3.550
+13	Transflor -Morrisons Alstro	2.000
+14	Transflor - Capiro	2.750
+15	Freight ECU	3.150
+16	Freight COL	2.300
+17	Peak Freight - ECU	3.950
+18	Peak Freight - COL	2.700
+19	Peak Freight - Ken	3.900
+20	Inland Transport Ecu - FB	3.500
+21	Inland Transport Ecu - HB	3.500
+22	Inland Transport Ecu - QB	3.500
+23	Inland Transport Col - FB	2.600
+24	Inland Transport Col - HB	2.600
+25	Inland Transport Col - QB	2.600
+26	AM	1.010
+27	Inland Transport Ken - FB	3.500
+28	Inland Transport Ken - HB	1.750
+29	Inland Transport Ken - QB	1.750
+30	Freight Absolute - Ecu	0.005
+31	Freight Absolute - Col	0.001
+32	Freight Absolute - Ken	0.001
+33	Duty Percentage	1.000
+34	DEF/PEACH Absolute - Ecu	0.002
+35	DEF/PEACH Absolute - Col	0.001
+36	DEF/PEACH Absolute - Ken	0.003
+37	Clearance Absolute - Ecu	0.002
+38	Clearance Absolute - Col	0.002
+39	Clearance Absolute - Ken	0.014
+40	Clearance Per Kilo - Ecu	0.220
+41	Clearance Per Kilo - Col	0.220
+42	Clearance Per Kilo - Ken	0.220
+43	Inland Transport Per Kilo - Ecu	0.001
+44	Inland Transport Per Kilo - Col	0.050
+45	Inland Transport Per Kilo - Ken
+46	USD Rate for Wreaths & Capiro	0.833
+47	Freight COL - Morrisons	2.100
+48	Transflor Capiro -HB	3.500
+49	Inland Capiro - HB	1.300
+50	Inland Caprio - QB	1.300`
 
         input3.value = `1	Supplier - absolute
-                2	Supplier - per full box
-                3	Supplier - per half box
-                4	Supplier - per quarter box
-                5	Supplier - per fifth box
-                6	Supplier - per eighth box
-                7	Supplier - percentage
-                8	Freight - absolute	0.005
-                9	Freight - per kilo	2.85
-                10	Duty - percentage	1
-                11	DEF/PEA - absolute	0.002
-                12	Clearance - absolute	0.002
-                13	Clearance - per kilo	0.215
-                14	Transport (INLD) - per kilo	0.001
-                15	Transport (INLD) - per full box	7.5
-                16	Transport (INLD) - per half box	3.75
-                17	Transport (INLD) - per quarter box	1.875
-                18	Transport (INLD) - per fifth box	1.125
-                19	Transport (INLD) - per eighth box	1.125
-                20	Transport (CUST) - per full box	6.25
-                21	Transport (CUST) - per half box	4.65
-                22	Transport (CUST) - per quarter box	3.55
-                23	Transport (CUST) - per fifth box	3.55
-                24	Transport (CUST) - per eighth box	3.55`
+2	Supplier - per full box
+3	Supplier - per half box
+4	Supplier - per quarter box
+5	Supplier - per fifth box
+6	Supplier - per eighth box
+7	Supplier - percentage
+8	Freight - absolute	0.005
+9	Freight - per kilo	2.85
+10	Duty - percentage	1
+11	DEF/PEA - absolute	0.002
+12	Clearance - absolute	0.002
+13	Clearance - per kilo	0.215
+14	Transport (INLD) - per kilo	0.001
+15	Transport (INLD) - per full box	7.5
+16	Transport (INLD) - per half box	3.75
+17	Transport (INLD) - per quarter box	1.875
+18	Transport (INLD) - per fifth box	1.125
+19	Transport (INLD) - per eighth box	1.125
+20	Transport (CUST) - per full box	6.25
+21	Transport (CUST) - per half box	4.65
+22	Transport (CUST) - per quarter box	3.55
+23	Transport (CUST) - per fifth box	3.55
+24	Transport (CUST) - per eighth box	3.55`
 
 
 //        input4.value = `Chrysant Cremon Andrea Purple	0.21	110	15.714	HB	0.378	01430564483	(((((PRIJS + ((double)#1#) +

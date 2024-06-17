@@ -38,7 +38,7 @@
 
 /* Style for the textareas */
 .input-textarea {
-    width: 100%; /* Full width of parent container */
+    width: 90%; /* Full width of parent container */
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
