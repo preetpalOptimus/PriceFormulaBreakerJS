@@ -73,6 +73,11 @@ function processInputsAndGenerateCode() {
         const input3 = document.getElementById('input3')
         const input4 = document.getElementById('input4')
 
+        if (input4.value.replace(/\s/g, "") == "") {
+            alert("Please fill in order line and price formula field.");
+            return
+        }
+
         input1.value = `Currency code	Shortening	VALVERK
 1	USD	94.34
 2	GBP	100
