@@ -6,17 +6,20 @@ function displayResults(code) {
         console.log(results)
         // Calculate for total number of boxes
         const calculateTotal = results.map(line => {
-            line.airFreightCost = (+line.airFreightCost - line.purchasePrice).toFixed(3)
-            //line.purchasePrice = (line.purchasePrice  * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
-            line.airFreightCost = (+line.airFreightCost * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
-            line.clearanceCost = (+line.clearanceCost * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
-            line.defPeachAbsolute = (+line.defPeachAbsolute * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
-            line.inlandTransportCost = (+line.inlandTransportCost * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
-            line.total = (+line.total * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
-            line.florisoftTotal = (+line.florisoftTotal * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
-            line.transflorCost = (+line.transflorCost * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
-            line.totalStems = +line.noOfBoxes * +line.boxContent
-            line.totalCost = (line.purchasePrice * (+line.noOfBoxes * +line.boxContent)).toFixed(2)
+            line.noOfBoxesRecieved = line.stemsLeftToSell > 0 ? ((line.stemsLeftToSell + line.stemsNotRecieved) / line.boxContent) + line.noOfBoxesRecieved : line.noOfBoxesRecieved;
+
+            line.airFreightCost = (+line.airFreightCost - line.purchasePrice).toFixed(3);
+
+            //line.purchasePrice = (line.purchasePrice  * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.airFreightCost = (+line.airFreightCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.clearanceCost = (+line.clearanceCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.defPeachAbsolute = (+line.defPeachAbsolute * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.inlandTransportCost = (+line.inlandTransportCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.total = (+line.total * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.florisoftTotal = (+line.florisoftTotal * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.transflorCost = (+line.transflorCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.totalStems = +line.noOfBoxesRecieved * +line.boxContent
+            line.totalPurchasePrice = (line.purchasePrice * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(2)
 
             return line
         })
@@ -57,7 +60,7 @@ function createTable(data) {
             header: "Inland Transport Cost", keyName: "inlandTransportCost", total: 0
         },
         {
-            header: "Transflor Cost", keyName: "totalCost", total: 0
+            header: "Transflor Cost", keyName: "transflorCost", total: 0
         },
         {
             header: "*AM", keyName: "section6"
@@ -72,19 +75,25 @@ function createTable(data) {
             header: "Shipment No", keyName: "shipmentNo"
         },
         {
-            header: "No of boxes", keyName: "noOfBoxes", total: 0
+            header: "No of boxes ordered", keyName: "noOfBoxesOrdered", total: 0
         },
         {
-            header: "Kolli", keyName: "kolli", total: 0
+            header: "No of boxes recieved", keyName: "noOfBoxesRecieved", total: 0
         },
         {
             header: "Box Content", keyName: "boxContent"
         },
         {
-            header: "Total Stems", keyName: "totalStems", total: 0
+            header: "Stems Left To Sell", keyName: "stemsLeftToSell"
         },
         {
-            header: "Total Purchase Price", keyName: "totalCost", total: 0
+            header: "Stems not recieved", keyName: "stemsNotRecieved"
+        },
+        {
+            header: "Total Stems Recieved", keyName: "totalStems", total: 0
+        },
+        {
+            header: "Total Purchase Price", keyName: "totalPurchasePrice", total: 0
         }
     ]
     
@@ -156,8 +165,10 @@ function processInputsAndGenerateCode() {
                             const fustCode = #fustCode;
                             const florCal = #florCal;
                             const shipmentNo = #shipmentNo;
-                            const fustaantal = #noOfBoxes;
-                            const kolli = #kolli;`
+                            const fustaantal = #noOfBoxesOrdered;
+                            const noOfBoxesRecieved = #noOfBoxesRecieved;
+                            const stemsLeftToSell = #stemsLeftToSell;
+                            const stemsNotRecieved = #stemsNotRecieved;`
 
         let mainObject = `let costBreakdown = {
                                 description: name,
@@ -171,9 +182,11 @@ function processInputsAndGenerateCode() {
                                 total: ((section1 + section2 + section3 + section4 + section5) * section6).toFixed(3),
                                 florisoftTotal: florCal,
                                 shipmentNo: shipmentNo,
-                                noOfBoxes: fustaantal,
-                                kolli: kolli,
-                                boxContent: inhust
+                                noOfBoxesOrdered: fustaantal,
+                                noOfBoxesRecieved: noOfBoxesRecieved,
+                                boxContent: inhust,
+                                stemsLeftToSell: stemsLeftToSell,
+                                stemsNotRecieved: stemsNotRecieved
                             };
                             costBreakdowns.push(costBreakdown)`
 
@@ -954,8 +967,10 @@ function handleOrderInput(input) {
             florCal: line[5].trim(),
             shipmentNo: `"${line[6].trim()}"`,
             formula: line[7].trim().split("\n").join(""),
-            noOfBoxes: line[8].trim(),
-            kolli: line[9].trim(),
+            noOfBoxesOrdered: line[8].trim(),
+            noOfBoxesRecieved: line[9].trim(),
+            stemsLeftToSell: line[10] === "" ? 0 : line[10],
+            stemsNotRecieved: line[11] === "" ? 0 : line[11],
         }
     })
 
