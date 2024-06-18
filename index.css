@@ -74,7 +74,7 @@ table {
     width: 90%;
     border-collapse: collapse;
     margin: 20px 0;
-    font-size: 18px;
+    font-size: 14px;
     text-align: center;
     font-family: "Roboto Flex", sans-serif;
 }
@@ -95,4 +95,13 @@ th {
 
 .column7 {
     background-color: lightblue;
+    font-weight:600
+}
+
+.column2 {
+    border-left: 2px solid red;
+}
+
+.column6 {
+    border-right: 2px solid red;
 }

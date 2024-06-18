@@ -1,11 +1,27 @@
 function displayResults(code) {
         const tableContainer = document.getElementById('table-container');
     try {
-        const result = new Function(code)();
+        const results = new Function(code)();
 
-        console.log(result)
+        console.log(results)
+        // Calculate for total number of boxes
+        const calculateTotal = results.map(line => {
+            line.airFreightCost = (+line.airFreightCost - line.purchasePrice).toFixed(3)
+            //line.purchasePrice = (line.purchasePrice  * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
+            line.airFreightCost = (+line.airFreightCost * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
+            line.clearanceCost = (+line.clearanceCost * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
+            line.defPeachAbsolute = (+line.defPeachAbsolute * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
+            line.inlandTransportCost = (+line.inlandTransportCost * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
+            line.total = (+line.total * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
+            line.florisoftTotal = (+line.florisoftTotal * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
+            line.transflorCost = (+line.transflorCost * (+line.noOfBoxes * +line.boxContent)).toFixed(3)
+            line.totalStems = +line.noOfBoxes * +line.boxContent
+            line.totalCost = (line.purchasePrice * (+line.noOfBoxes * +line.boxContent)).toFixed(2)
 
-        tableContainer.appendChild(createTable(result));
+            return line
+        })
+
+        tableContainer.appendChild(createTable(calculateTotal));
     } catch (error) {
         tableContainer.textContent = `Error: ${error.message}`;
     }
@@ -17,13 +33,79 @@ function createTable(data) {
 
     // Create table header row
     const header = table.createTHead();
+    const footer = table.createTFoot();
     const headerRow = header.insertRow(0);
+    const footerrRow = footer.insertRow(0);
 
-    const headers = ["Description", "Purchase Price", "Air Freight Cost", "DEF/PEACH Absolute", "Clearance Cost", "Inland Transport Cost", "Transflor Cost", "Total", "Florisoft Total", "Shipment No"];
+    const tableContent = [
+        {
+            header: "Description", keyName: "description"
+        },
+        {
+            header: "Stem Purchase Price", keyName: "purchasePrice"
+        },
+        {
+            header: "Air Freight Cost", keyName: "airFreightCost", total: 0
+        },
+        {
+            header: "DEF/PEACH Absolute", keyName: "defPeachAbsolute", total: 0
+        },
+        {
+            header: "Clearance Cost", keyName: "clearanceCost", total: 0
+        },
+        {
+            header: "Inland Transport Cost", keyName: "inlandTransportCost", total: 0
+        },
+        {
+            header: "Transflor Cost", keyName: "totalCost", total: 0
+        },
+        {
+            header: "*AM", keyName: "section6"
+        },
+        {
+            header: "Total Revenue", keyName: "total", total: 0
+        },
+        {
+            header: "Florisoft Total Revenue", keyName: "florisoftTotal", total: 0
+        },
+        {
+            header: "Shipment No", keyName: "shipmentNo"
+        },
+        {
+            header: "No of boxes", keyName: "noOfBoxes", total: 0
+        },
+        {
+            header: "Kolli", keyName: "kolli", total: 0
+        },
+        {
+            header: "Box Content", keyName: "boxContent"
+        },
+        {
+            header: "Total Stems", keyName: "totalStems", total: 0
+        },
+        {
+            header: "Total Purchase Price", keyName: "totalCost", total: 0
+        }
+    ]
+    
 
-    headers.forEach((headerText, index) => {
+    tableContent.forEach((cont, index) => {
         const cell = headerRow.insertCell(index);
-        cell.outerHTML = `<th>${headerText}</th>`;
+        cell.outerHTML = `<th>${cont.header}</th>`;
+    });
+
+    tableContent.forEach(content => {
+        if (content.hasOwnProperty("total")) {
+            data.forEach(row => {
+                content.total += +row[content.keyName]
+            })
+            content.total = (content.total).toFixed(2)
+        }
+    })
+
+    tableContent.forEach((cont, index) => {
+        const cell = footerrRow.insertCell(index);
+        cell.outerHTML = `<th>${cont.total ? cont.total : ''}</th>`;
     });
 
     // Create table body and populate with data
@@ -35,10 +117,18 @@ function createTable(data) {
             const cell = row.insertCell(index);
             cell.textContent = value;
 
-            if (index === 7) {
+            if (index === 2) {
+                cell.classList.add('column2');
+            }
+
+            if (index === 6) {
+                cell.classList.add('column6');
+            }
+
+            if (index === 8) {
                 cell.classList.add('column7');
             }
-            if (index === 8) {
+            if (index === 9) {
                 cell.classList.add('column8');
             }
         });
@@ -51,11 +141,11 @@ function createTable(data) {
 function processInputsAndGenerateCode() {
     try {
 
-        const variablesRep = [
+        const textReplacements = [
             ["PRIJS", "prijs"],
             ["bestelPartij.Fustcode", "fustCode"],
             ["bestelPartij.Volume", "volume"],
-            ["bestelPartij.InhFust", ["inhust"]],
+            ["bestelPartij.InhFust", "inhust"],
             ["(double)", ""]
         ]
 
@@ -65,13 +155,32 @@ function processInputsAndGenerateCode() {
                             const inhust = #boxCont;
                             const fustCode = #fustCode;
                             const florCal = #florCal;
-                            const shipmentNo = #shipmentNo;`
+                            const shipmentNo = #shipmentNo;
+                            const fustaantal = #noOfBoxes;
+                            const kolli = #kolli;`
 
+        let mainObject = `let costBreakdown = {
+                                description: name,
+                                purchasePrice: prijs,
+                                airFreightCost: section1.toFixed(3),
+                                defPeachAbsolute: section2.toFixed(3),
+                                clearanceCost: section3.toFixed(3),
+                                inlandTransportCost: section4.toFixed(3),
+                                transflorCost: section5.toFixed(3),
+                                section6: section6,
+                                total: ((section1 + section2 + section3 + section4 + section5) * section6).toFixed(3),
+                                florisoftTotal: florCal,
+                                shipmentNo: shipmentNo,
+                                noOfBoxes: fustaantal,
+                                kolli: kolli,
+                                boxContent: inhust
+                            };
+                            costBreakdowns.push(costBreakdown)`
 
-        const input1 = document.getElementById('input1')
-        const input2 = document.getElementById('input2')
-        const input3 = document.getElementById('input3')
-        const input4 = document.getElementById('input4')
+        const input1 = document.getElementById('input1');
+        const input2 = document.getElementById('input2');
+        const input3 = document.getElementById('input3');
+        const input4 = document.getElementById('input4');
 
         if (input4.value.replace(/\s/g, "") == "") {
             alert("Please fill in order line and price formula field.");
@@ -673,161 +782,142 @@ function processInputsAndGenerateCode() {
         const generalCodeInput = input2.value.trim()
         const formulaCodeInput = input3.value.trim()
         const flowerTableInput = input4.value.trim()
-
-        let firstPair;
         
+        const currencyCodeLines = parseData(currencyCodeInput);
+        const generalCodeLines = parseData(generalCodeInput);
+        const formulaCodeLines = parseData(formulaCodeInput);
+        const orderLines = handleOrderInput(flowerTableInput);
 
-        let consoleLogs = `let costBreakdown = {
-    description: name,
-    purchasePrice: prijs,
-    airFreightCost: section1.toFixed(3),
-    defPeachAbsolute: section2.toFixed(3),
-    clearanceCost: section3.toFixed(3),
-    inlandTransportCost: section4.toFixed(3),
-    transflorCost: section5.toFixed(3),
-    total: ((section1 + section2 + section3 + section4 + section5) * section6).toFixed(3),
-    florisoftTotal: florCal,
-    shipmentNo: shipmentNo
-};
-costBreakdowns.push(costBreakdown)`
-
-        //#region Utils
-        function parseData(dataString) {
-            const dataArray = dataString.split('\n').map(line => line.split('\t'));
-            return dataArray;
-        }
-
-        function findClosingParentheses(str) {
-            const stack = [];
-            const pairs = [];
-
-            for (let i = 0; i < str.length; i++) {
-                if (str[i] === '(') {
-                    stack.push(i);
-                } else if (str[i] === ')') {
-                    if (stack.length === 0) {
-                        throw new Error("No matching opening parenthesis found for closing parenthesis at index " + i);
-                    }
-                    const openingIndex = stack.pop();
-                    pairs.push([openingIndex, i])
-                }
-            }
-
-            if (stack.length !== 0) {
-                throw new Error("No matching closing parenthesis found for opening parenthesis at index " + stack.pop());
-            }
-
-            return pairs;
-        }
-
-        function findRealSectionsOpenClose(str) {
-            const parenthesisPairs = findClosingParentheses(str);
-            let sortedPairs = parenthesisPairs.sort((a, b) => a[0] - b[0]);
-            let realPairs = [];
-            let current = sortedPairs[1][1]
-            firstPair = sortedPairs[0]
-            realPairs.push(sortedPairs[1])
-            sortedPairs.forEach((pair, index) => {
-                if (index !== 0 && pair[0] > current) {
-                    realPairs.push(pair);
-                    current = pair[1]
-                }
-            })
-
-            const r1 = realPairs.pop()
-            const r2 = realPairs.pop()
-
-            realPairs.push([r2[0], r1[1]])
-
-            return realPairs;
-        }
-
-        function createCSharpCodeSection(str) {
-            const realPairs = findRealSectionsOpenClose(str)
-
-            let counter = 0;
-            let finalString = "";
-            realPairs.forEach((realPair, index) => {
-                counter += 1
-                finalString += " const section" + counter + " = " + str.substring(realPair[0], realPair[1]) + "); "
-            })
-
-            let lastSection = str.substring(firstPair[1] + 1, str.length);
-            lastSection = lastSection.replace("*", "")
-            finalString += " const section" + (counter + 1) + " = " + lastSection + "; "
-
-            return finalString;
-        }
-        //#endregion
 
         let allFunctions = "";
-
         let allFunctionNames = "";
 
-        
-        const parsedData1 = parseData(currencyCodeInput);
-        const parsedData = parseData(generalCodeInput);
-        const parsedData2 = parseData(formulaCodeInput);
-        const parsedData3 = handleOrderInput(flowerTableInput);
-
-
         // Replace main varibale values
-        parsedData3.forEach((orderLine, index) => {
+        orderLines.forEach((orderLine, index) => {
             let orderVariables = mainVariables;
             let newFinalString = createCSharpCodeSection(orderLine.formula);
 
-            variablesRep.forEach(variable => {
+            textReplacements.forEach(variable => {
                 newFinalString = newFinalString.replaceAll(variable[0], variable[1])
             })
-
+            
             for (const [key, value] of Object.entries(orderLine)) {
                 orderVariables = orderVariables.replace("#" + (key.trim()), value)
             }
             // Replace general codes
-            parsedData.forEach(generalCode => {
+            generalCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
             })
 
             // Replace currency codes
-            parsedData1.forEach(generalCode => {
+            currencyCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2]/100))
             })
 
             // Replace formula codes
-            parsedData2.forEach(generalCode => {
+            formulaCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("#" + (generalCode[0].trim()) + "#", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
             })
 
             let functionName = `section${index}() `
-
             allFunctions += `function ${functionName}
                     {
-                                                ${orderVariables + newFinalString + consoleLogs}
+                                                ${orderVariables + newFinalString + mainObject}
                     }`
 
             allFunctionNames += functionName + "; "
         })
 
 
-        // Example processing of inputs to generate C# code
+        // Example processing of inputs to generate JS code
         // Replace this with your actual logic
         const generatedCode = `
         const costBreakdowns = [];
-                                        ${allFunctionNames}
-                                        return costBreakdowns;
+        ${allFunctionNames}
+        return costBreakdowns;
 
-                    ${allFunctions}
+        ${allFunctions}
 
         `;
         console.log(generatedCode)
-
-        //document.getElementById("codeInput").value = generatedCode;
 
         displayResults(generatedCode);
 
     } catch (error) {
         console.log("Error: ", error.toString())
     }
+}
+
+
+//#region Utils
+
+let firstPair;
+
+function parseData(dataString) {
+    const dataArray = dataString.split('\n').map(line => line.split('\t'));
+    return dataArray;
+}
+
+function findClosingParentheses(str) {
+    const stack = [];
+    const pairs = [];
+
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] === '(') {
+            stack.push(i);
+        } else if (str[i] === ')') {
+            if (stack.length === 0) {
+                throw new Error("No matching opening parenthesis found for closing parenthesis at index " + i);
+            }
+            const openingIndex = stack.pop();
+            pairs.push([openingIndex, i])
+        }
+    }
+
+    if (stack.length !== 0) {
+        throw new Error("No matching closing parenthesis found for opening parenthesis at index " + stack.pop());
+    }
+
+    return pairs;
+}
+
+function findRealSectionsOpenClose(str) {
+    const parenthesisPairs = findClosingParentheses(str);
+    let sortedPairs = parenthesisPairs.sort((a, b) => a[0] - b[0]);
+    let realPairs = [];
+    let current = sortedPairs[1][1]
+    firstPair = sortedPairs[0]
+    realPairs.push(sortedPairs[1])
+    sortedPairs.forEach((pair, index) => {
+        if (index !== 0 && pair[0] > current) {
+            realPairs.push(pair);
+            current = pair[1]
+        }
+    })
+
+    const r1 = realPairs.pop()
+    const r2 = realPairs.pop()
+
+    realPairs.push([r2[0], r1[1]])
+
+    return realPairs;
+}
+
+function createCSharpCodeSection(str) {
+    const realPairs = findRealSectionsOpenClose(str)
+
+    let counter = 0;
+    let finalString = "";
+    realPairs.forEach((realPair, index) => {
+        counter += 1
+        finalString += " const section" + counter + " = " + str.substring(realPair[0], realPair[1]) + "); "
+    })
+
+    let lastSection = str.substring(firstPair[1] + 1, str.length);
+    lastSection = lastSection.replace("*", "")
+    finalString += " const section" + (counter + 1) + " = " + lastSection + "; "
+
+    return finalString;
 }
 
 function handleOrderInput(input) {
@@ -858,75 +948,17 @@ function handleOrderInput(input) {
         return {
             name: `"${line[0].trim().replace("\n", "")}"`,
             price: line[1].trim(),
-            volume: line[3].trim(),
             boxCont: line[2].trim(),
+            volume: line[3].trim(),
             fustCode: `"${line[4].trim()}"`,
             florCal: line[5].trim(),
             shipmentNo: `"${line[6].trim()}"`,
-            formula: line[7].trim().split("\n").join("")
+            formula: line[7].trim().split("\n").join(""),
+            noOfBoxes: line[8].trim(),
+            kolli: line[9].trim(),
         }
     })
 
     return final
 }
-
-function addStyles() {
-
-    setTimeout(function () {
-        // Select the <p> tag by its id
-        var costDetails = document.getElementById('costDetails');
-        // Split the text content by ';'
-        var segments = costDetails.innerHTML.split('\n').map(line => line.split('\r'));
-        const allOrders = []
-
-        // Clear the original content of <p>
-        costDetails.textContent = '';
-        const newsegmentss = segments.map(segment => segment[0])
-
-        const splitIndex = [];
-        let counter = 0
-        newsegmentss.forEach((each) => {
-            if (each === '*') {
-                splitIndex.push(counter)
-            }
-            counter++
-        })
-
-
-        splitIndex.forEach((index, i) => {
-            let newResult = Array.from(newsegmentss)
-            let orderLine = newResult.slice(i === 0 ? 0 : splitIndex[i - 1], index)
-            newResult = Array.from(newsegmentss)
-            allOrders.push(orderLine)
-        })
-
-        // Iterate over each segment
-        allOrders.forEach(function (segments) {
-            if (segments) {
-                var div_segemnt = document.createElement('div');
-                div_segemnt.className = "div_segments"
-                div_segemnt.style.margin = "5px";
-                div_segemnt.style.padding = "10px";
-                segments.forEach(segment => {
-                    if (segment && segment != "*") {
-                        // Create a new <div> element for each segment
-                        var div = document.createElement('div');
-                        var newText = segment.trim().split(":");
-                        // Trim whitespace and add necessary styles
-                        div.innerHTML = `<b>${newText[0]}</b> : ${newText[1]}`;
-                        div.style.fontFamily = 'Courier New, monospace';
-                        div.style.fontSize = '14px';
-                        div.style.lineHeight = '1.6';
-                        div.style.marginBottom = '5px';
-                        div_segemnt.appendChild(div);
-
-                    }
-                })
-                // Append the <div> to the <p> tag
-                costDetails.appendChild(div_segemnt);
-            }
-        });
-
-    }, 500)
-
-}
+//#endregion
