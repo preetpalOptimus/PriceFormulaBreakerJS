@@ -1,3 +1,66 @@
+const tableContent = [
+    {
+        header: "Description", keyName: "description"
+    },
+    {
+        header: "Stem Purchase Price", keyName: "purchasePrice"
+    },
+    {
+        header: "Air Freight Cost", keyName: "airFreightCost", total: 0
+    },
+    {
+        header: "DEF/PEACH Absolute", keyName: "defPeachAbsolute", total: 0
+    },
+    {
+        header: "Clearance Cost", keyName: "clearanceCost", total: 0
+    },
+    {
+        header: "Inland Transport Cost", keyName: "inlandTransportCost", total: 0
+    },
+    {
+        header: "Transflor Cost", keyName: "transflorCost", total: 0
+    },
+    {
+        header: "*AM", keyName: "section6"
+    },
+    {
+        header: "Total Revenue", keyName: "total", total: 0
+    },
+    {
+        header: "Florisoft Total Revenue", keyName: "florisoftTotal", total: 0
+    },
+    {
+        header: "Shipment No", keyName: "shipmentNo"
+    },
+    {
+        header: "No of boxes ordered", keyName: "noOfBoxesOrdered", total: 0
+    },
+    {
+        header: "No of boxes recieved", keyName: "noOfBoxesRecieved", total: 0
+    },
+    {
+        header: "Box Content", keyName: "boxContent"
+    },
+    {
+        header: "Stems Left To Sell", keyName: "stemsLeftToSell"
+    },
+    {
+        header: "Stems not recieved", keyName: "stemsNotRecieved"
+    },
+    {
+        header: "Volume", keyName: "volume"
+    },
+    {
+        header: "Total Stems Recieved", keyName: "totalStems", total: 0
+    },
+    {
+        header: "Total Purchase Price", keyName: "totalPurchasePrice", total: 0
+    },
+    {
+        header: "Absolute", keyName: "absoluteCost", total: 0, visible: false
+    }
+]
+
 function displayResults(code) {
         const tableContainer = document.getElementById('table-container');
     try {
@@ -21,17 +84,30 @@ function displayResults(code) {
             line.totalStems = +line.noOfBoxesRecieved * +line.boxContent
             line.totalPurchasePrice = (line.purchasePrice * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(2)
 
+            line.absoluteCost = (((0.001 / (2.3 / line.volume)) * 0.943) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+
             return line
         })
 
         tableContainer.appendChild(createTable(calculateTotal));
+
+        
     } catch (error) {
         tableContainer.textContent = `Error: ${error.message}`;
     }
+
+    tableContent.forEach((cont, ind) => {
+        if (cont.hasOwnProperty("visible")) {
+            if (!cont.visible) {
+                show_hide_column(ind, cont.visible)
+            }
+        }
+    })
 }
 
 function createTable(data) {
     const table = document.createElement('table');
+    table.id = "resultTable"
     table.border = '1';
 
     // Create table header row
@@ -40,81 +116,21 @@ function createTable(data) {
     const headerRow = header.insertRow(0);
     const footerrRow = footer.insertRow(0);
 
-    const tableContent = [
-        {
-            header: "Description", keyName: "description"
-        },
-        {
-            header: "Stem Purchase Price", keyName: "purchasePrice"
-        },
-        {
-            header: "Air Freight Cost", keyName: "airFreightCost", total: 0
-        },
-        {
-            header: "DEF/PEACH Absolute", keyName: "defPeachAbsolute", total: 0
-        },
-        {
-            header: "Clearance Cost", keyName: "clearanceCost", total: 0
-        },
-        {
-            header: "Inland Transport Cost", keyName: "inlandTransportCost", total: 0
-        },
-        {
-            header: "Transflor Cost", keyName: "transflorCost", total: 0
-        },
-        {
-            header: "*AM", keyName: "section6"
-        },
-        {
-            header: "Total Revenue", keyName: "total", total: 0
-        },
-        {
-            header: "Florisoft Total Revenue", keyName: "florisoftTotal", total: 0
-        },
-        {
-            header: "Shipment No", keyName: "shipmentNo"
-        },
-        {
-            header: "No of boxes ordered", keyName: "noOfBoxesOrdered", total: 0
-        },
-        {
-            header: "No of boxes recieved", keyName: "noOfBoxesRecieved", total: 0
-        },
-        {
-            header: "Box Content", keyName: "boxContent"
-        },
-        {
-            header: "Stems Left To Sell", keyName: "stemsLeftToSell"
-        },
-        {
-            header: "Stems not recieved", keyName: "stemsNotRecieved"
-        },
-        {
-            header: "Total Stems Recieved", keyName: "totalStems", total: 0
-        },
-        {
-            header: "Total Purchase Price", keyName: "totalPurchasePrice", total: 0
-        }
-    ]
-    
-
     tableContent.forEach((cont, index) => {
         const cell = headerRow.insertCell(index);
-        cell.outerHTML = `<th>${cont.header}</th>`;
+        cell.outerHTML = `<th class='column${index}'>${cont.header}</th>`;
     });
 
     tableContent.forEach(content => {
-        if (content.hasOwnProperty("total")) {
-            data.forEach(row => {
-                content.total += +row[content.keyName]
-            })
-            content.total = (content.total).toFixed(2)
-        }
+        data.forEach(row => {
+            content.total += +row[content.keyName]
+        })
+        content.total = (content.total ? content.total : 0).toFixed(2)
     })
 
     tableContent.forEach((cont, index) => {
         const cell = footerrRow.insertCell(index);
-        cell.outerHTML = `<th>${cont.total ? cont.total : ''}</th>`;
+        cell.outerHTML = `<th class='column${index}'>${cont.total > 0 ? cont.total : ''}</th>`;
     });
 
     // Create table body and populate with data
@@ -122,28 +138,21 @@ function createTable(data) {
 
     data.forEach((item, index) => {
         const row = tbody.insertRow();
-        Object.values(item).forEach((value, index) => {
-            const cell = row.insertCell(index);
-            cell.textContent = value;
-
-            if (index === 2) {
-                cell.classList.add('column2');
-            }
-
-            if (index === 6) {
-                cell.classList.add('column6');
-            }
-
-            if (index === 8) {
-                cell.classList.add('column7');
-            }
-            if (index === 9) {
-                cell.classList.add('column8');
-            }
-        });
+            Object.values(item).forEach((value, index) => {
+                const cell = row.insertCell(index);
+                cell.textContent = value;
+                cell.classList.add(`column${index}`);
+            });
     });
 
     return table;
+}
+
+function show_hide_column(col_no, do_show) {
+    const columnCells = document.getElementsByClassName(`column${col_no}`);
+    Array.from(columnCells).forEach(cell => {
+        cell.style.display = do_show ? "block" : "none";
+    })
 }
 
 
@@ -186,7 +195,8 @@ function processInputsAndGenerateCode() {
                                 noOfBoxesRecieved: noOfBoxesRecieved,
                                 boxContent: inhust,
                                 stemsLeftToSell: stemsLeftToSell,
-                                stemsNotRecieved: stemsNotRecieved
+                                stemsNotRecieved: stemsNotRecieved,
+                                volume: volume
                             };
                             costBreakdowns.push(costBreakdown)`
 
