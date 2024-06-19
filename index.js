@@ -9,13 +9,13 @@ const tableContent = [
         header: "Freight Absolute", keyName: "freightAbsolute", total: 0
     },
     {
-        header: "Supplier Absolute", keyName: "supplierAbsolute", total: 0
+        header: "Supplier Absolute = Total Purchase Price", keyName: "supplierAbsolute", total: 0
     },
     {
-        header: "Air Freight Cost", keyName: "airFreightCost", total: 0
+        header: "Air Freight Cost", keyName: "airFreightCost", total: 0, visible: false
     },
     {
-        header: "supFreAbsoluteMultiple", keyName: "supFreAbsoluteMultiple", total: 0, visible: false
+        header: "dutyPercentage", keyName: "dutyPercentage", total: 0, visible: false
     },
     {
         header: "DEF/PEACH Absolute", keyName: "defPeachAbsolute", total: 0
@@ -63,7 +63,7 @@ const tableContent = [
         header: "Total Stems Recieved", keyName: "totalStems", total: 0
     },
     {
-        header: "Total Purchase Price", keyName: "totalPurchasePrice", total: 0
+        header: "Total Purchase Price (in pounds)", keyName: "totalPurchasePrice", total: 0
     },
     {
         header: "Absolute", keyName: "absoluteCost", total: 0, visible: false
@@ -74,18 +74,22 @@ function displayResults(code) {
         const tableContainer = document.getElementById('table-container');
     try {
         const results = new Function(code)();
-
+        console.log(results)
         // Calculate for total number of boxes
         const calculateTotal = results.map(line => {
             line.noOfBoxesRecieved = line.stemsLeftToSell > 0 ? ((line.stemsLeftToSell + line.stemsNotRecieved) / line.boxContent) + line.noOfBoxesRecieved : line.noOfBoxesRecieved;
 
+            const supplierAbsoluteVar = ((+line.supplierAbsolute * line.dutyPercentage) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            const freightAbsoluteVar = ((+line.freightAbsolute * line.dutyPercentage) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            const totalPurchasePriceVar = (line.purchasePrice * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(2)
+
+
             //line.airFreightCost = (+line.airFreightCost - line.purchasePrice).toFixed(3);
             //line.purchasePrice = (line.purchasePrice  * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            //line.airFreightCost = (((+line.freightAbsolute + +line.supplierAbsolute) * +line.dutyPercentage) *  (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
 
-
-            line.airFreightCost = (((+line.freightAbsolute + +line.supplierAbsolute) * +line.supFreAbsoluteMultiple) *  (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
-            line.freightAbsolute = (+line.freightAbsolute * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
-            line.supplierAbsolute = (+line.supplierAbsolute * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.freightAbsolute = freightAbsoluteVar
+            line.supplierAbsolute = supplierAbsoluteVar
 
             line.clearanceCost = (+line.clearanceCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.defPeachAbsolute = (+line.defPeachAbsolute * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
@@ -94,7 +98,7 @@ function displayResults(code) {
             line.florisoftTotal = (+line.florisoftTotal * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.transflorCost = (+line.transflorCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.totalStems = +line.noOfBoxesRecieved * +line.boxContent
-            line.totalPurchasePrice = (line.purchasePrice * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(2)
+            line.totalPurchasePrice = totalPurchasePriceVar
 
             line.absoluteCost = (((0.001 + (2.3 / line.volume)) * 0.943) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
 
@@ -194,10 +198,10 @@ function processInputsAndGenerateCode() {
         let mainObject = `let costBreakdown = {
                                 description: name,
                                 purchasePrice: prijs,
-                                supplierAbsolute: section7.toFixed(3),
                                 freightAbsolute: section8.toFixed(3),
+                                supplierAbsolute: section7.toFixed(3),
                                 airFreightCost: section1.toFixed(3),
-                                supFreAbsoluteMultiple: section9.toFixed(3),
+                                dutyPercentage: section9.toFixed(3),
                                 defPeachAbsolute: section2.toFixed(3),
                                 clearanceCost: section3.toFixed(3),
                                 inlandTransportCost: section4.toFixed(3),
@@ -835,7 +839,6 @@ function processInputsAndGenerateCode() {
             let orderVariables = mainVariables;
             let result = createCSharpCodeSection(orderLine.formula, 0);
 
-            console.log(result)
             let newFinalString = result.finalString
             let result2 = createCSharpCodeSection(result.firstSection, true, result.maxCounter)
             let firstSection = result2.finalString
