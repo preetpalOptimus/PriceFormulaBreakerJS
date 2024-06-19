@@ -93,7 +93,7 @@ th {
     color: white;
 }
 
-td.column8 {
+td.column11 {
     background-color: lightblue;
     font-weight:600
 }
@@ -102,6 +102,6 @@ td.column8 {
     border-left: 2px solid red;
 }
 
-.column6 {
+.column9 {
     border-right: 2px solid red;
 }

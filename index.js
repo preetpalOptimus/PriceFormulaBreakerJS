@@ -6,7 +6,16 @@ const tableContent = [
         header: "Stem Purchase Price", keyName: "purchasePrice"
     },
     {
+        header: "Freight Absolute", keyName: "freightAbsolute", total: 0
+    },
+    {
+        header: "Supplier Absolute", keyName: "supplierAbsolute", total: 0
+    },
+    {
         header: "Air Freight Cost", keyName: "airFreightCost", total: 0
+    },
+    {
+        header: "supFreAbsoluteMultiple", keyName: "supFreAbsoluteMultiple", total: 0, visible: false
     },
     {
         header: "DEF/PEACH Absolute", keyName: "defPeachAbsolute", total: 0
@@ -66,15 +75,18 @@ function displayResults(code) {
     try {
         const results = new Function(code)();
 
-        console.log(results)
         // Calculate for total number of boxes
         const calculateTotal = results.map(line => {
             line.noOfBoxesRecieved = line.stemsLeftToSell > 0 ? ((line.stemsLeftToSell + line.stemsNotRecieved) / line.boxContent) + line.noOfBoxesRecieved : line.noOfBoxesRecieved;
 
-            line.airFreightCost = (+line.airFreightCost - line.purchasePrice).toFixed(3);
-
+            //line.airFreightCost = (+line.airFreightCost - line.purchasePrice).toFixed(3);
             //line.purchasePrice = (line.purchasePrice  * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
-            line.airFreightCost = (+line.airFreightCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+
+
+            line.airFreightCost = (((+line.freightAbsolute + +line.supplierAbsolute) * +line.supFreAbsoluteMultiple) *  (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.freightAbsolute = (+line.freightAbsolute * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.supplierAbsolute = (+line.supplierAbsolute * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+
             line.clearanceCost = (+line.clearanceCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.defPeachAbsolute = (+line.defPeachAbsolute * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.inlandTransportCost = (+line.inlandTransportCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
@@ -84,7 +96,7 @@ function displayResults(code) {
             line.totalStems = +line.noOfBoxesRecieved * +line.boxContent
             line.totalPurchasePrice = (line.purchasePrice * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(2)
 
-            line.absoluteCost = (((0.001 / (2.3 / line.volume)) * 0.943) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.absoluteCost = (((0.001 + (2.3 / line.volume)) * 0.943) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
 
             return line
         })
@@ -182,7 +194,10 @@ function processInputsAndGenerateCode() {
         let mainObject = `let costBreakdown = {
                                 description: name,
                                 purchasePrice: prijs,
+                                supplierAbsolute: section7.toFixed(3),
+                                freightAbsolute: section8.toFixed(3),
                                 airFreightCost: section1.toFixed(3),
+                                supFreAbsoluteMultiple: section9.toFixed(3),
                                 defPeachAbsolute: section2.toFixed(3),
                                 clearanceCost: section3.toFixed(3),
                                 inlandTransportCost: section4.toFixed(3),
@@ -818,10 +833,16 @@ function processInputsAndGenerateCode() {
         // Replace main varibale values
         orderLines.forEach((orderLine, index) => {
             let orderVariables = mainVariables;
-            let newFinalString = createCSharpCodeSection(orderLine.formula);
+            let result = createCSharpCodeSection(orderLine.formula, 0);
+
+            console.log(result)
+            let newFinalString = result.finalString
+            let result2 = createCSharpCodeSection(result.firstSection, true, result.maxCounter)
+            let firstSection = result2.finalString
 
             textReplacements.forEach(variable => {
                 newFinalString = newFinalString.replaceAll(variable[0], variable[1])
+                firstSection = firstSection.replaceAll(variable[0], variable[1])
             })
             
             for (const [key, value] of Object.entries(orderLine)) {
@@ -830,22 +851,25 @@ function processInputsAndGenerateCode() {
             // Replace general codes
             generalCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
+                firstSection = firstSection.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
             })
 
             // Replace currency codes
             currencyCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2]/100))
+                firstSection = firstSection.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2]/100))
             })
 
             // Replace formula codes
             formulaCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("#" + (generalCode[0].trim()) + "#", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
+                firstSection = firstSection.replaceAll("#" + (generalCode[0].trim()) + "#", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
             })
 
             let functionName = `section${index}() `
             allFunctions += `function ${functionName}
                     {
-                                                ${orderVariables + newFinalString + mainObject}
+                                                ${orderVariables + newFinalString + firstSection + mainObject}
                     }`
 
             allFunctionNames += functionName + "; "
@@ -904,10 +928,20 @@ function findClosingParentheses(str) {
     return pairs;
 }
 
-function findRealSectionsOpenClose(str) {
+function findRealSectionsOpenClose(str, second) {
     const parenthesisPairs = findClosingParentheses(str);
     let sortedPairs = parenthesisPairs.sort((a, b) => a[0] - b[0]);
+
     let realPairs = [];
+
+    if (second) {
+        realPairs.push(sortedPairs[2])
+        realPairs.push(sortedPairs[27])
+        realPairs.push(sortedPairs[35])
+        return realPairs
+    }
+
+
     let current = sortedPairs[1][1]
     firstPair = sortedPairs[0]
     realPairs.push(sortedPairs[1])
@@ -926,21 +960,36 @@ function findRealSectionsOpenClose(str) {
     return realPairs;
 }
 
-function createCSharpCodeSection(str) {
-    const realPairs = findRealSectionsOpenClose(str)
+function createCSharpCodeSection(str, second, prevCounter) {
+    const realPairs = findRealSectionsOpenClose(str, second)
+
+    let result = {
+        finalString: "",
+        firstSection: "",
+        maxCounter: 0
+    }
 
     let counter = 0;
-    let finalString = "";
+
+    if (second) {
+        counter = prevCounter+1;
+    }
     realPairs.forEach((realPair, index) => {
         counter += 1
-        finalString += " const section" + counter + " = " + str.substring(realPair[0], realPair[1]) + "); "
+        let section = " const section" + counter + " = " + str.substring(realPair[0], realPair[1]) + "); "
+        result.finalString += section;
+
+        if (index === 0) {
+            result.firstSection = section;
+        }
     })
-
-    let lastSection = str.substring(firstPair[1] + 1, str.length);
-    lastSection = lastSection.replace("*", "")
-    finalString += " const section" + (counter + 1) + " = " + lastSection + "; "
-
-    return finalString;
+    if (!second) {
+        let lastSection = str.substring(firstPair[1] + 1, str.length);
+        lastSection = lastSection.replace("*", "")
+        result.finalString += " const section" + (counter + 1) + " = " + lastSection + "; ";
+        result.maxCounter = counter;
+    }
+    return result;
 }
 
 function handleOrderInput(input) {
