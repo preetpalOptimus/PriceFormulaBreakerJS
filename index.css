@@ -71,7 +71,7 @@
 
 
 table {
-    width: 90%;
+    width: 95%;
     border-collapse: collapse;
     margin: 20px 0;
     font-size: 14px;
@@ -81,6 +81,8 @@ table {
 
 table, th, td {
     border: 1px solid #dddddd;
+    font-weight: 400;
+    font-size: 12px;
 }
 
 th, td {
@@ -93,11 +95,15 @@ th {
     top: 0%;
     background-color: #007bff;
     color: white;
+    font-weight: 600;
 }
 
 td.column11 {
     background-color: lightblue;
     font-weight:600
+}
+.column0 {
+    font-weight: 600;
 }
 
 .column2 {
@@ -106,4 +112,8 @@ td.column11 {
 
 .column9 {
     border-right: 2px solid red;
+}
+
+column2, .column3 {
+    width: 50px
 }

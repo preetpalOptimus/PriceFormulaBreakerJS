@@ -6,10 +6,10 @@ const tableContent = [
         header: "Stem Purchase Price", keyName: "purchasePrice"
     },
     {
-        header: "Freight Absolute", keyName: "freightAbsolute", total: 0
+        header: "Freight Absolute (USD: 0.833)", keyName: "freightAbsolute", total: 0, total2: 0, currency: "£"
     },
     {
-        header: "Supplier Absolute = Total Purchase Price", keyName: "supplierAbsolute", total: 0
+        header: "Supplier Absolute  (USD: 0.833) = Total Purchase Price", keyName: "supplierAbsolute", total: 0, total2: 0, currency: "£"
     },
     {
         header: "Air Freight Cost", keyName: "airFreightCost", total: 0, visible: false
@@ -63,7 +63,7 @@ const tableContent = [
         header: "Total Stems Recieved", keyName: "totalStems", total: 0
     },
     {
-        header: "Total Purchase Price (in pounds)", keyName: "totalPurchasePrice", total: 0
+        header: "Total Purchase Price (in dollars)", keyName: "totalPurchasePrice", total: 0, currency: "$"
     },
     {
         header: "Absolute", keyName: "absoluteCost", total: 0, visible: false
@@ -74,7 +74,7 @@ function displayResults(code) {
         const tableContainer = document.getElementById('table-container');
     try {
         const results = new Function(code)();
-        console.log(results)
+        
         // Calculate for total number of boxes
         const calculateTotal = results.map(line => {
             line.noOfBoxesRecieved = line.stemsLeftToSell > 0 ? ((line.stemsLeftToSell + line.stemsNotRecieved) / line.boxContent) + line.noOfBoxesRecieved : line.noOfBoxesRecieved;
@@ -98,14 +98,23 @@ function displayResults(code) {
             line.florisoftTotal = (+line.florisoftTotal * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.transflorCost = (+line.transflorCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.totalStems = +line.noOfBoxesRecieved * +line.boxContent
-            line.totalPurchasePrice = totalPurchasePriceVar
+            line.totalPurchasePrice = `${totalPurchasePriceVar}`
 
             line.absoluteCost = (((0.001 + (2.3 / line.volume)) * 0.943) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
 
             return line
         })
 
-        tableContainer.appendChild(createTable(calculateTotal));
+        const calculateTotalNew = JSON.parse(JSON.stringify(results))
+
+        const newResults = calculateTotalNew.map(line => {
+            line.supplierAbsolute = `£${line.supplierAbsolute} \r\r $${(line.supplierAbsolute / 0.833).toFixed(3)}`
+            line.freightAbsolute = `£${line.freightAbsolute} \r\r $${(line.freightAbsolute / 0.833).toFixed(3)}`
+            return line
+        })
+        console.log(results, newResults)
+
+        tableContainer.appendChild(createTable(newResults));
 
         
     } catch (error) {
@@ -139,14 +148,27 @@ function createTable(data) {
 
     tableContent.forEach(content => {
         data.forEach(row => {
+            const rowVal = "" +  row[content.keyName]
+            if (rowVal.includes("\r")) {
+                const vals = rowVal.split("\r\r");
+                let num = vals[0].trim().replace(/[^a-zA-Z0-9. ]/g, "");
+                let num2 = vals[1].trim().replace(/[^a-zA-Z0-9. ]/g, "");
+                content.total += +num
+                content.total2 += +num2
+            } else {
             content.total += +row[content.keyName]
+            }
         })
-        content.total = (content.total ? content.total : 0).toFixed(2)
+        console.log(data)
+        content.total = +(content.total ? content.total : 0).toFixed(2)
     })
 
     tableContent.forEach((cont, index) => {
         const cell = footerrRow.insertCell(index);
-        cell.outerHTML = `<th class='column${index}'>${cont.total > 0 ? cont.total : ''}</th>`;
+        const currency = cont.hasOwnProperty("currency") ? cont.currency : "";
+        const val1 = cont.total > 0 ? currency + cont.total : ''
+        const val2 = cont.hasOwnProperty('total2') ? ' \n $' + cont.total2.toFixed(2) : ''
+        cell.outerHTML = `<th class='column${index}'> <span>${val1}</span> <span>${val2}</span> </th>`;
     });
 
     // Create table body and populate with data
@@ -223,11 +245,6 @@ function processInputsAndGenerateCode() {
         const input2 = document.getElementById('input2');
         const input3 = document.getElementById('input3');
         const input4 = document.getElementById('input4');
-
-        if (input4.value.replace(/\s/g, "") == "") {
-            alert("Please fill in order line and price formula field.");
-            return
-        }
 
         input1.value = `1	USD	94.34
 2	GBP	100
@@ -312,513 +329,10 @@ function processInputsAndGenerateCode() {
 24	Transport (CUST) - per eighth box	3.55`
 
 
-//        input4.value = `Chrysant Cremon Andrea Purple	0.21	110	15.714	HB	0.378	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Cremon Magnum White	0.21	110	15.714	HB	0.378	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Cremon Magnum Yellow	0.21	110	15.714	HB	0.378	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Cremon Petrushka Pink	0.21	110	15.714	HB	0.378	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spider Marcela Lavender	0.21	110	15.714	HB	0.378	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spider Quartz Green	0.21	110	15.714	HB	0.378	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spider Tiana Dark Lavender	0.21	110	15.714	HB	0.378	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spider Top Spin White	0.21	110	15.714	HB	0.378	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Button Mont Blanc White	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Button Olive Green	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Button Paintball Sunny Yellow	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Cushion Bonita White	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Cushion Dorito Orange	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Cushion Pascua Purple	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Cushion Petrushka Pink	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Daisy Alma White	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Daisy Amethest Dark Bicolour	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Daisy Kintaro Pink	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Daisy Memphis Purple	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Daisy Mia Red	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Daisy Multisol Yellow	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-//Chrysant Spray Zembla Sunny Yellow	0.145	110	15.714	HB	0.324	01430564483	(((((PRIJS + ((double)#1#) +
-//(bestelPartij.Fustcode == "FB" ? ((double)#2#) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*|6|)
-//+
-//((((double)|31|)+(((double)|16|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*|3|))*((double)|33|)) +
-//((double)|35|) +
-//(((double)|38|) + (((double)|41|)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) +
-//((((double)|43|)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
-//(((bestelPartij.Fustcode == "FB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "QB" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|49|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|49|) :
-//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))+
-//(bestelPartij.Fustcode == "FB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "HB" ? ((double)|48|) :    (bestelPartij.Fustcode == "QB" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "5B" ? ((double)|48|) :
-//   (bestelPartij.Fustcode == "8B" ? ((double)|48|) :
-//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust))*|26|
-        //`
+        if (input4.value.replace(/\s/g, "") == "") {
+            alert("Please fill in order line and price formula field.");
+            return
+        }
 
         const currencyCodeInput = input1.value.trim()
         const generalCodeInput = input2.value.trim()
@@ -1031,8 +545,8 @@ function handleOrderInput(input) {
             formula: line[7].trim().split("\n").join(""),
             noOfBoxesOrdered: line[8].trim(),
             noOfBoxesRecieved: line[9].trim(),
-            stemsLeftToSell: line[10] === "" ? 0 : line[10],
-            stemsNotRecieved: line[11] === "" ? 0 : line[11],
+            stemsLeftToSell: line[10] === "" ? 0 : line[10] ? line[10] : 0,
+            stemsNotRecieved: line[11] === "" ? 0 : line[11] ? line[11] : 0,
         }
     })
 
