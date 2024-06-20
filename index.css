@@ -51,7 +51,6 @@ h1 {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    resize: none;
     font-size: 14px;
     color: #333;
 }
@@ -100,6 +99,7 @@ table tfoot {
 th, td {
     padding: 12px;
     text-align: center;
+    white-space: pre-line;
 }
 
 th {
@@ -128,4 +128,23 @@ td.column12 {
 
 column2, .column3 {
     width: 50px
+}
+
+.tooltip {
+    visibility: hidden;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 100%; /* Position above the cell */
+    left: 50%;
+    margin-left: -50px; /* Center the tooltip */
+    width: 100px;
+}
+
+td:hover .tooltip {
+    visibility: visible;
 }

@@ -9,10 +9,10 @@ const tableContent = [
         header: "Stem Purchase Price", keyName: "purchasePrice", currency: "£"
     },
     {
-        header: "Freight Absolute (USD: 0.833)", keyName: "freightAbsolute", total: 0, total2: 0, currency: "£"
+        header: "Air Freight Total", keyName: "freightAbsolute", total: 0, total2: 0, currency: "£"
     },
     {
-        header: "Supplier Absolute  (USD: 0.833) = Total Purchase Price", keyName: "supplierAbsolute", total: 0, total2: 0, currency: "£"
+        header: "Supplier Total = Total Purchase Price", keyName: "supplierAbsolute", total: 0, total2: 0, currency: "£"
     },
     {
         header: "Air Freight Cost", keyName: "airFreightCost", total: 0, visible: false
@@ -66,7 +66,7 @@ const tableContent = [
         header: "Total Stems Recieved", keyName: "totalStems", total: 0
     },
     {
-        header: "Total Purchase Price", keyName: "totalPurchasePrice", total: 0, total2: 0, currency: "£"
+        header: "Total Purchase Price (USD: 0.833)", keyName: "totalPurchasePrice", total: 0, total2: 0, currency: "£"
     },
     {
         header: "Absolute", keyName: "absoluteCost", total: 0, visible: false
@@ -77,7 +77,7 @@ function displayResults(code) {
     const tableContainer = document.getElementById('table-container');
     try {
         const results = new Function(code)();
-        
+        console.log(results)
         // Calculate for total number of boxes
         const calculateTotal = results.map((line, index) => {
             line.noOfBoxesRecieved = line.stemsLeftToSell > 0 ? ((line.stemsLeftToSell + line.stemsNotRecieved) / line.boxContent) + line.noOfBoxesRecieved : line.noOfBoxesRecieved;
@@ -105,7 +105,7 @@ function displayResults(code) {
             line.totalStems = +line.noOfBoxesRecieved * +line.boxContent
             line.totalPurchasePrice = `${totalPurchasePriceVar}`
 
-            line.absoluteCost = (((0.001 + (2.3 / line.volume)) * 0.943) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            //line.absoluteCost = (((0.001 + (2.3 / line.volume)) * 0.943) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
 
             return line
         })
@@ -113,9 +113,9 @@ function displayResults(code) {
         const calculateTotalNew = JSON.parse(JSON.stringify(results))
 
         const newResults = calculateTotalNew.map(line => {
-            line.totalPurchasePrice = `£${(line.totalPurchasePrice * 0.833).toFixed(3)} \r\r $${line.totalPurchasePrice}`
-            line.supplierAbsolute = `£${line.supplierAbsolute} \r\r $${(line.supplierAbsolute / 0.833).toFixed(3)}`
-            line.freightAbsolute = `£${line.freightAbsolute} \r\r $${(line.freightAbsolute / 0.833).toFixed(3)}`
+            line.totalPurchasePrice = `£${(line.totalPurchasePrice * 0.833).toFixed(3)} \n\n $${line.totalPurchasePrice}`
+            line.supplierAbsolute = `£${line.supplierAbsolute} \n\n $${(line.supplierAbsolute / line.supplierCurrency).toFixed(3)}`
+            line.freightAbsolute = `£${line.freightAbsolute} \n\n $${(line.freightAbsolute / line.freightCurrency).toFixed(3)}`
             return line
         })
 
@@ -156,8 +156,8 @@ function createTable(data) {
     tableContent.forEach(content => {
         data.forEach(row => {
             const rowVal = "" +  row[content.keyName]
-            if (rowVal.includes("\r")) {
-                const vals = rowVal.split("\r\r");
+            if (rowVal.includes("\n")) {
+                const vals = rowVal.split("\n\n");
                 let num = vals[0].trim().replace(/[^a-zA-Z0-9. ]/g, "");
                 let num2 = vals[1].trim().replace(/[^a-zA-Z0-9. ]/g, "");
                 content.total += +num
@@ -174,7 +174,7 @@ function createTable(data) {
         const cell = footerrRow.insertCell(index);
         const currency = cont.hasOwnProperty("currency") ? cont.currency : "";
         const val1 = cont.total > 0 ? currency + cont.total : ''
-        const val2 = cont.hasOwnProperty('total2') ? ' \n $' + cont.total2.toFixed(2) : ''
+        const val2 = cont.hasOwnProperty('total2') ? ' \n\n $' + cont.total2.toFixed(2) : ''
         cell.outerHTML = `<th class='column${index}'> <span>${val1}</span> <span>${val2}</span> </th>`;
     });
 
@@ -204,6 +204,13 @@ function createTable(data) {
             const cell = row.insertCell(index);
             cell.textContent = cellValue;
             cell.classList.add(`column${index}`);
+
+            if (column.keyName === "freightAbsolute") {
+                cell.title = item.freightCurrency
+            }
+            if (column.keyName === "supplierAbsolute") {
+                cell.title = item.supplierCurrency
+            }
         });
     })
 
@@ -219,7 +226,7 @@ function show_hide_column(col_no, do_show) {
 
 
 function processInputsAndGenerateCode() {
-    try {
+    //try {
 
         const textReplacements = [
             ["PRIJS", "prijs"],
@@ -261,7 +268,9 @@ function processInputsAndGenerateCode() {
                                 boxContent: inhust,
                                 stemsLeftToSell: stemsLeftToSell,
                                 stemsNotRecieved: stemsNotRecieved,
-                                volume: volume
+                                volume: volume,
+                                freightCurrency : 0.943,
+                                supplierCurrency: 0.833
                             };
                             costBreakdowns.push(costBreakdown)`
 
@@ -381,6 +390,9 @@ function processInputsAndGenerateCode() {
             let result2 = createCSharpCodeSection(result.firstSection, true, result.maxCounter)
             let firstSection = result2.finalString
 
+            //let currencyVars = findCurrencyCodesInFirstSection(firstSection)
+            //console.log(currencyVars)
+            
             textReplacements.forEach(variable => {
                 newFinalString = newFinalString.replaceAll(variable[0], variable[1])
                 firstSection = firstSection.replaceAll(variable[0], variable[1])
@@ -393,12 +405,25 @@ function processInputsAndGenerateCode() {
             generalCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
                 firstSection = firstSection.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
+
+               //currencyVars.forEach((vars, index) => {
+               //     if (vars.includes("|" + (generalCode[0].trim()) + "|")) {
+               //         currencyVars[index] =  +(vars.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2]))
+                        
+               //     }
+               // })
             })
 
             // Replace currency codes
             currencyCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2]/100))
-                firstSection = firstSection.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2]/100))
+                firstSection = firstSection.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2] / 100))
+
+                //currencyVars.forEach((vars, index) => {
+                //    if (vars.includes("$" + (generalCode[0].trim()) + "$")) {
+                //        currencyVars[index] = +(vars.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2] / 100)))
+                //    }
+                //})
             })
 
             // Replace formula codes
@@ -406,6 +431,9 @@ function processInputsAndGenerateCode() {
                 newFinalString = newFinalString.replaceAll("#" + (generalCode[0].trim()) + "#", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
                 firstSection = firstSection.replaceAll("#" + (generalCode[0].trim()) + "#", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
             })
+
+            //orderVariables += `const supplierCurr = ${currencyVars[0]};`
+            //orderVariables += `const freightCurr = ${currencyVars[1]};`
 
             let functionName = `section${index}() `
             allFunctions += `function ${functionName}
@@ -431,13 +459,48 @@ function processInputsAndGenerateCode() {
 
         displayResults(generatedCode);
 
-    } catch (error) {
-        console.log("Error: ", error.toString())
-    }
+    //} catch (error) {
+    //    console.log("Error: ", error.toString())
+    //}
 }
 
 
 //#region Utils
+
+function findCurrencyCodesInFirstSection(firstSection) {
+    const splits = firstSection.split(";");
+    
+    splits.length = 2;
+
+    const results = [];
+
+    splits.forEach(split => {
+        const indexes = findLastAndSecondLastIndexOfCloseParenthesis(split);
+        const currencyVar = split.substring(indexes.secondLastIndex+2, indexes.lastIndex)
+        results.push(currencyVar);
+    })
+
+    return results;
+}
+
+function findLastAndSecondLastIndexOfCloseParenthesis(str) {
+    let lastIndex = -1;
+    let secondLastIndex = -1;
+
+    // Iterate through the string from the end to the start
+    for (let i = str.length - 1; i >= 0; i--) {
+        if (str[i] === ')') {
+            if (lastIndex === -1) {
+                lastIndex = i; // First occurrence from the end
+            } else {
+                secondLastIndex = i; // Second occurrence from the end
+                break; // We found both, so we can stop
+            }
+        }
+    }
+
+    return { lastIndex, secondLastIndex };
+}
 
 let firstPair;
 
@@ -470,18 +533,40 @@ function findClosingParentheses(str) {
 }
 
 function findRealSectionsOpenClose(str, second) {
-    const parenthesisPairs = findClosingParentheses(str);
+    let parenthesisPairs = findClosingParentheses(str);
     let sortedPairs = parenthesisPairs.sort((a, b) => a[0] - b[0]);
+    let newStr;
+
+    const firstPairs = sortedPairs[0][1];
+    const lastPairs = sortedPairs[sortedPairs.length-1][0];
+
+    if (!second && (lastPairs > firstPairs)) {
+        newStr = "(" + str + ")*1";
+        parenthesisPairs = findClosingParentheses(newStr);
+        sortedPairs = parenthesisPairs.sort((a, b) => a[0] - b[0]);
+    } else {
+        newStr = str;
+    }
 
     let realPairs = [];
 
+    console.log(sortedPairs)
+    
     if (second) {
-        realPairs.push(sortedPairs[2])
-        realPairs.push(sortedPairs[27])
-        realPairs.push(sortedPairs[35])
-        return realPairs
-    }
 
+
+        if (sortedPairs[35]) {
+            realPairs.push(sortedPairs[2]);
+            realPairs.push(sortedPairs[27]);
+            realPairs.push(sortedPairs[35])
+        } else {
+            realPairs.push(sortedPairs[1]);
+            realPairs.push(sortedPairs[26]);
+            realPairs.push([0,0])
+        }
+
+        return [realPairs, newStr]
+    }
 
     let current = sortedPairs[1][1]
     firstPair = sortedPairs[0]
@@ -497,12 +582,16 @@ function findRealSectionsOpenClose(str, second) {
     const r2 = realPairs.pop()
 
     realPairs.push([r2[0], r1[1]])
-
-    return realPairs;
+    console.log(realPairs)
+    return [realPairs, newStr];
 }
 
 function createCSharpCodeSection(str, second, prevCounter) {
-    const realPairs = findRealSectionsOpenClose(str, second)
+
+    const results = findRealSectionsOpenClose(str, second)
+    const realPairs = results[0];
+    const newStr = results[1];
+    console.log(results)
 
     let result = {
         finalString: "",
@@ -517,7 +606,7 @@ function createCSharpCodeSection(str, second, prevCounter) {
     }
     realPairs.forEach((realPair, index) => {
         counter += 1
-        let section = " const section" + counter + " = " + str.substring(realPair[0], realPair[1]) + "); "
+        let section = " const section" + counter + " = " + newStr.substring(realPair[0], realPair[1]) + "); "
         result.finalString += section;
 
         if (index === 0) {
@@ -525,7 +614,7 @@ function createCSharpCodeSection(str, second, prevCounter) {
         }
     })
     if (!second) {
-        let lastSection = str.substring(firstPair[1] + 1, str.length);
+        let lastSection = newStr.substring(firstPair[1] + 1, newStr.length);
         lastSection = lastSection.replace("*", "")
         result.finalString += " const section" + (counter + 1) + " = " + lastSection + "; ";
         result.maxCounter = counter;
