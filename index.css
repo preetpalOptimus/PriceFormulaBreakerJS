@@ -11,57 +11,64 @@
     text-align: center;
 }
 
-.output-textarea {
-    width: 80%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+body {
     font-family: Arial, sans-serif;
-    font-size: 16px;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-/* wwwroot/css/site.css */
+h1 {
+    color: #333;
+}
 
-/* Flex container for side-by-side elements */
 .flex-container {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px; /* Adjust margin as needed */
+    justify-content: space-around;
+    width: 100%;
+    margin: 20px 0;
 }
 
-/* Each input group within the flex container */
 .input-group {
-    flex: 1; /* Each group takes up equal space */
-    padding-right: 10px; /* Adjust padding between groups */
+    flex: 1;
+    margin: 0 10px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Style for the textareas */
+    .input-group h4 {
+        color: #555;
+    }
+
 .input-textarea {
-    width: 90%; /* Full width of parent container */
+    width: 90%;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-family: Arial, sans-serif;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    resize: none;
     font-size: 14px;
-    resize: vertical; /* Allow vertical resizing */
+    color: #333;
 }
 
-
-.output-textarea {
-    height: 200px;
-    background-color: #f9f9f9;
-    border-color: #ddd;
-}
+    .input-textarea:focus {
+        outline: none;
+        border-color: #007BFF;
+    }
 
 .button {
+    background-color: #007BFF;
+    color: #fff;
     padding: 10px 20px;
-    margin: 10px 5px;
-    background-color: #007bff;
-    color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
+    margin-top: 20px;
     font-size: 16px;
 }
 
@@ -85,6 +92,11 @@ table, th, td {
     font-size: 12px;
 }
 
+table tfoot {
+    position: sticky;
+    bottom: 0%;
+}
+
 th, td {
     padding: 12px;
     text-align: center;
@@ -98,7 +110,7 @@ th {
     font-weight: 600;
 }
 
-td.column11 {
+td.column12 {
     background-color: lightblue;
     font-weight:600
 }
@@ -106,11 +118,11 @@ td.column11 {
     font-weight: 600;
 }
 
-.column2 {
+.column3 {
     border-left: 2px solid red;
 }
 
-.column9 {
+.column10 {
     border-right: 2px solid red;
 }
 

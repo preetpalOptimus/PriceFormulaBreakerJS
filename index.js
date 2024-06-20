@@ -1,9 +1,12 @@
 const tableContent = [
     {
+        header: "", keyName: "number"
+    },
+    {
         header: "Description", keyName: "description"
     },
     {
-        header: "Stem Purchase Price", keyName: "purchasePrice"
+        header: "Stem Purchase Price", keyName: "purchasePrice", currency: "£"
     },
     {
         header: "Freight Absolute (USD: 0.833)", keyName: "freightAbsolute", total: 0, total2: 0, currency: "£"
@@ -18,25 +21,25 @@ const tableContent = [
         header: "dutyPercentage", keyName: "dutyPercentage", total: 0, visible: false
     },
     {
-        header: "DEF/PEACH Absolute", keyName: "defPeachAbsolute", total: 0
+        header: "DEF/PEACH Absolute", keyName: "defPeachAbsolute", total: 0, currency: "£"
     },
     {
-        header: "Clearance Cost", keyName: "clearanceCost", total: 0
+        header: "Clearance Cost", keyName: "clearanceCost", total: 0, currency: "£"
     },
     {
-        header: "Inland Transport Cost", keyName: "inlandTransportCost", total: 0
+        header: "Inland Transport Cost", keyName: "inlandTransportCost", total: 0, currency: "£"
     },
     {
-        header: "Transflor Cost", keyName: "transflorCost", total: 0
+        header: "Transflor Cost", keyName: "transflorCost", total: 0, currency: "£"
     },
     {
         header: "*AM", keyName: "section6"
     },
     {
-        header: "Total Revenue", keyName: "total", total: 0
+        header: "Total Revenue", keyName: "total", total: 0, currency: "£"
     },
     {
-        header: "Florisoft Total Revenue", keyName: "florisoftTotal", total: 0
+        header: "Florisoft Total Revenue", keyName: "florisoftTotal", total: 0, currency: "£"
     },
     {
         header: "Shipment No", keyName: "shipmentNo"
@@ -63,7 +66,7 @@ const tableContent = [
         header: "Total Stems Recieved", keyName: "totalStems", total: 0
     },
     {
-        header: "Total Purchase Price (in dollars)", keyName: "totalPurchasePrice", total: 0, currency: "$"
+        header: "Total Purchase Price", keyName: "totalPurchasePrice", total: 0, total2: 0, currency: "£"
     },
     {
         header: "Absolute", keyName: "absoluteCost", total: 0, visible: false
@@ -71,13 +74,15 @@ const tableContent = [
 ]
 
 function displayResults(code) {
-        const tableContainer = document.getElementById('table-container');
+    const tableContainer = document.getElementById('table-container');
     try {
         const results = new Function(code)();
         
         // Calculate for total number of boxes
-        const calculateTotal = results.map(line => {
+        const calculateTotal = results.map((line, index) => {
             line.noOfBoxesRecieved = line.stemsLeftToSell > 0 ? ((line.stemsLeftToSell + line.stemsNotRecieved) / line.boxContent) + line.noOfBoxesRecieved : line.noOfBoxesRecieved;
+
+            line.number = index + 1;
 
             const supplierAbsoluteVar = ((+line.supplierAbsolute * line.dutyPercentage) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             const freightAbsoluteVar = ((+line.freightAbsolute * line.dutyPercentage) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
@@ -108,11 +113,11 @@ function displayResults(code) {
         const calculateTotalNew = JSON.parse(JSON.stringify(results))
 
         const newResults = calculateTotalNew.map(line => {
+            line.totalPurchasePrice = `£${(line.totalPurchasePrice * 0.833).toFixed(3)} \r\r $${line.totalPurchasePrice}`
             line.supplierAbsolute = `£${line.supplierAbsolute} \r\r $${(line.supplierAbsolute / 0.833).toFixed(3)}`
             line.freightAbsolute = `£${line.freightAbsolute} \r\r $${(line.freightAbsolute / 0.833).toFixed(3)}`
             return line
         })
-        console.log(results, newResults)
 
         tableContainer.appendChild(createTable(newResults));
 
@@ -141,11 +146,13 @@ function createTable(data) {
     const headerRow = header.insertRow(0);
     const footerrRow = footer.insertRow(0);
 
+    // Displays headers for each column
     tableContent.forEach((cont, index) => {
         const cell = headerRow.insertCell(index);
         cell.outerHTML = `<th class='column${index}'>${cont.header}</th>`;
     });
 
+    // Calculates the total for each column
     tableContent.forEach(content => {
         data.forEach(row => {
             const rowVal = "" +  row[content.keyName]
@@ -159,10 +166,10 @@ function createTable(data) {
             content.total += +row[content.keyName]
             }
         })
-        console.log(data)
         content.total = +(content.total ? content.total : 0).toFixed(2)
     })
 
+    // Displays the total for each column
     tableContent.forEach((cont, index) => {
         const cell = footerrRow.insertCell(index);
         const currency = cont.hasOwnProperty("currency") ? cont.currency : "";
@@ -173,15 +180,32 @@ function createTable(data) {
 
     // Create table body and populate with data
     const tbody = table.createTBody();
-
     data.forEach((item, index) => {
         const row = tbody.insertRow();
-            Object.values(item).forEach((value, index) => {
-                const cell = row.insertCell(index);
-                cell.textContent = value;
-                cell.classList.add(`column${index}`);
+
+        tableContent.forEach((column, index) => {
+            let cellValue = item[column.keyName]
+
+            // Finds associated table content 
+            const tableCont = tableContent.filter(cont => {
+                if (cont.keyName === column.keyName) {
+                    return cont;
+                }
             });
-    });
+
+            // Adds currency symbol infront of cell value
+            if (tableCont && tableCont.length > 0) {
+                if (tableCont[0].hasOwnProperty("currency") && !tableCont[0].hasOwnProperty("total2")) {
+                    cellValue = tableCont[0].currency + cellValue;
+                }
+            }
+
+            // Creates individual table cell
+            const cell = row.insertCell(index);
+            cell.textContent = cellValue;
+            cell.classList.add(`column${index}`);
+        });
+    })
 
     return table;
 }
