@@ -115,20 +115,20 @@ th {
     font-weight: 600;
 }
 
-td.column16 {
+td.column16, td.column17 {
     background-color: lightblue;
-    font-weight:600
+    font-weight: 600
 }
 .column0 {
     font-weight: 600;
 }
 
-.column7 {
-    border-left: 2px solid red;
+.column7, .column3 {
+    border-left: 3px solid red;
 }
 
 .column14 {
-    border-right: 2px solid red;
+    border-right: 3px solid red;
 }
 
 column2, .column3 {

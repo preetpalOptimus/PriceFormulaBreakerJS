@@ -48,7 +48,7 @@ const tableContent = [
         header: "*AM", keyName: "section6"
     },
     {
-        header: "Total Revenue", keyName: "total", total: 0, currency: "£"
+        header: "Total Revenue", keyName: "totalVar", total: 0, currency: "£"
     },
     {
         header: "Florisoft Total Revenue", keyName: "florisoftTotalVar", total: 0, currency: "£"
@@ -118,7 +118,9 @@ function displayResults(code) {
             line.clearanceCost = (+line.clearanceCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.defPeachAbsolute = (+line.defPeachAbsolute * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.inlandTransportCost = (+line.inlandTransportCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
-            line.total = (+line.total * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3);
+
+
+            line.totalVar = (+line.total * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3);
 
             line.florisoftTotalVar = (+line.florisoftTotal * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
 
@@ -243,6 +245,15 @@ function createTable(data) {
             cell.textContent = cellValue;
             cell.classList.add(`column${index}`);
 
+            if (["florisoftTotalVar", "totalVar"].includes(column.keyName)) {
+                if (+item.florisoftTotalVar === +item.totalVar) {
+                    cell.style.color = "green";
+                } else {
+                    cell.style.color = "red";
+                }
+            }
+
+            // Add title tag to relevant cells using content
             if (column.keyName.includes("freightTotal", "freightAbsoluteCost")) {
                 cell.title = `${item.currency[0].type} : ${item.currency[0].value}`
             }
@@ -255,8 +266,11 @@ function createTable(data) {
             if (column.keyName === "volPerKiloTotal") {
                 cell.title = `VolPerKilo : ${item.volPerKilo}`
             }
-            if (column.keyName === "total") {
+            if (column.keyName === "florisoftTotalVar") {
                 cell.title = `PricePerStem : ${item.florisoftTotal}`
+            }
+            if (column.keyName === "totalVar") {
+                cell.title = `PricePerStem : ${item.total}`
             }
         });
     })
@@ -331,92 +345,10 @@ function processInputsAndGenerateCode() {
         const input3 = document.getElementById('input3');
         const input4 = document.getElementById('input4');
 
-        input1.value = `1	USD	94.34
-2	GBP	100
-4	USD	94.34
-15	EUR	89.286
-16	EUSD	86.6
-99	USD	83.333
-`
 
-        input2.value = `3	USD to GBP	0.943
-4	GBP to GBP	1.000
-5	EUR to GBP	0.892
-6	Wreath/Capiro USD to GBP	0.833
-7	USD to EUR	1.000
-8	Transflor - FB	6.500
-9	Transflor - HB	4.650
-10	Transflor - QB	3.550
-11	Transflor - 5B	3.550
-12	Transflor - 8B	3.550
-13	Transflor -Morrisons Alstro	2.000
-14	Transflor - Capiro	2.750
-15	Freight ECU	3.150
-16	Freight COL	2.300
-17	Peak Freight - ECU	3.950
-18	Peak Freight - COL	2.700
-19	Peak Freight - Ken	3.900
-20	Inland Transport Ecu - FB	3.500
-21	Inland Transport Ecu - HB	3.500
-22	Inland Transport Ecu - QB	3.500
-23	Inland Transport Col - FB	2.600
-24	Inland Transport Col - HB	2.600
-25	Inland Transport Col - QB	2.600
-26	AM	1.010
-27	Inland Transport Ken - FB	3.500
-28	Inland Transport Ken - HB	1.750
-29	Inland Transport Ken - QB	1.750
-30	Freight Absolute - Ecu	0.005
-31	Freight Absolute - Col	0.001
-32	Freight Absolute - Ken	0.001
-33	Duty Percentage	1.000
-34	DEF/PEACH Absolute - Ecu	0.002
-35	DEF/PEACH Absolute - Col	0.001
-36	DEF/PEACH Absolute - Ken	0.003
-37	Clearance Absolute - Ecu	0.002
-38	Clearance Absolute - Col	0.002
-39	Clearance Absolute - Ken	0.014
-40	Clearance Per Kilo - Ecu	0.220
-41	Clearance Per Kilo - Col	0.220
-42	Clearance Per Kilo - Ken	0.220
-43	Inland Transport Per Kilo - Ecu	0.001
-44	Inland Transport Per Kilo - Col	0.050
-45	Inland Transport Per Kilo - Ken
-46	USD Rate for Wreaths & Capiro	0.833
-47	Freight COL - Morrisons	2.100
-48	Transflor Capiro -HB	3.500
-49	Inland Capiro - HB	1.300
-50	Inland Caprio - QB	1.300`
-
-        input3.value = `1	Supplier - absolute
-2	Supplier - per full box
-3	Supplier - per half box
-4	Supplier - per quarter box
-5	Supplier - per fifth box
-6	Supplier - per eighth box
-7	Supplier - percentage
-8	Freight - absolute	0.005
-9	Freight - per kilo	2.85
-10	Duty - percentage	1
-11	DEF/PEA - absolute	0.002
-12	Clearance - absolute	0.002
-13	Clearance - per kilo	0.215
-14	Transport (INLD) - per kilo	0.001
-15	Transport (INLD) - per full box	7.5
-16	Transport (INLD) - per half box	3.75
-17	Transport (INLD) - per quarter box	1.875
-18	Transport (INLD) - per fifth box	1.125
-19	Transport (INLD) - per eighth box	1.125
-20	Transport (CUST) - per full box	6.25
-21	Transport (CUST) - per half box	4.65
-22	Transport (CUST) - per quarter box	3.55
-23	Transport (CUST) - per fifth box	3.55
-24	Transport (CUST) - per eighth box	3.55`
-
-
-        if (input4.value.replace(/\s/g, "") == "") {
-            alert("Please fill in order line and price formula field.");
-            return
+        if (input1.value.replace(/\s/g, "") == "" || input2.value.replace(/\s/g, "") == "" || input3.value.replace(/\s/g, "") == "" || input4.value.replace(/\s/g, "") == "") {
+            alert("Please fill in all the empty input fields");
+            return false
         }
 
         const currencyCodeInput = input1.value.trim()
@@ -726,16 +658,311 @@ function handleOrderInput(input) {
 }
 //#endregion
 
+
+//#startregion
+const checkboxesContent = [
+    {
+        id: "chkCurrencyCode",
+        targetInput: document.getElementById("input1"),
+        targetInputDefaultValue: `1	USD	94.34
+2	GBP	100
+4	USD	94.34
+15	EUR	89.286
+16	EUSD	86.6
+99	USD	83.333`
+    },
+    {
+        id: "chkGeneralCode",
+        targetInput: document.getElementById("input2"),
+        targetInputDefaultValue: `3	USD to GBP	0.943
+4	GBP to GBP	1.000
+5	EUR to GBP	0.892
+6	Wreath/Capiro USD to GBP	0.833
+7	USD to EUR	1.000
+8	Transflor - FB	6.500
+9	Transflor - HB	4.650
+10	Transflor - QB	3.550
+11	Transflor - 5B	3.550
+12	Transflor - 8B	3.550
+13	Transflor -Morrisons Alstro	2.000
+14	Transflor - Capiro	2.750
+15	Freight ECU	3.150
+16	Freight COL	2.300
+17	Peak Freight - ECU	3.950
+18	Peak Freight - COL	2.700
+19	Peak Freight - Ken	3.900
+20	Inland Transport Ecu - FB	3.500
+21	Inland Transport Ecu - HB	3.500
+22	Inland Transport Ecu - QB	3.500
+23	Inland Transport Col - FB	2.600
+24	Inland Transport Col - HB	2.600
+25	Inland Transport Col - QB	2.600
+26	AM	1.010
+27	Inland Transport Ken - FB	3.500
+28	Inland Transport Ken - HB	1.750
+29	Inland Transport Ken - QB	1.750
+30	Freight Absolute - Ecu	0.005
+31	Freight Absolute - Col	0.001
+32	Freight Absolute - Ken	0.001
+33	Duty Percentage	1.000
+34	DEF/PEACH Absolute - Ecu	0.002
+35	DEF/PEACH Absolute - Col	0.001
+36	DEF/PEACH Absolute - Ken	0.003
+37	Clearance Absolute - Ecu	0.002
+38	Clearance Absolute - Col	0.002
+39	Clearance Absolute - Ken	0.014
+40	Clearance Per Kilo - Ecu	0.220
+41	Clearance Per Kilo - Col	0.220
+42	Clearance Per Kilo - Ken	0.220
+43	Inland Transport Per Kilo - Ecu	0.001
+44	Inland Transport Per Kilo - Col	0.050
+45	Inland Transport Per Kilo - Ken
+46	USD Rate for Wreaths & Capiro	0.833
+47	Freight COL - Morrisons	2.100
+48	Transflor Capiro -HB	3.500
+49	Inland Capiro - HB	1.300
+50	Inland Caprio - QB	1.300`
+    },
+    {
+        id: "chkFormulaCode",
+        targetInput: document.getElementById("input3"),
+        targetInputDefaultValue: `1	Supplier - absolute		
+2	Supplier - per full box		
+3	Supplier - per half box		
+4	Supplier - per quarter box		
+5	Supplier - per fifth box		
+6	Supplier - per eighth box		
+7	Supplier - percentage		
+8	Freight - absolute	0.002	
+9	Freight - per kilo	2.100	
+10	Duty - percentage	1.000	
+11	DEF/PEA - absolute		
+12	Clearance - absolute	0.001	
+13	Clearance - per kilo	0.200	
+14	Transport (INLD) - per kilo		
+15	Transport (INLD) - per full box	1.650	
+16	Transport (INLD) - per half box	0.825	
+17	Transport (INLD) - per quarter box	0.420	
+18	Transport (INLD) - per fifth box	0.420	
+19	Transport (INLD) - per eighth box	0.420	
+20	Transport (CUST) - per full box		
+21	Transport (CUST) - per half box		
+22	Transport (CUST) - per quarter box		
+23	Transport (CUST) - per fifth box		
+24	Transport (CUST) - per eighth box`
+    }
+]
+
+function fillInputs() {
+    checkboxesContent.forEach(checkbox => {
+        const chk = document.getElementById(checkbox.id);
+        if (chk.checked) {
+            checkbox.targetInput.value = checkbox.targetInputDefaultValue
+        } else {
+            checkbox.targetInput.value = ""
+        }
+    })
+}
+//#endregion
+
+
 function init() {
-    const btnRun = document.getElementById("btnRun");
+    document.addEventListener("DOMContentLoaded", () => {
+        const btnRun = document.getElementById("btnRun");
 
-    btnRun.addEventListener("click", () => {
+        fillInputs()
 
-        const generatedCode = processInputsAndGenerateCode();
+        btnRun.addEventListener("click", () => {
 
-        displayResults(generatedCode);
-    });
+            const generatedCode = processInputsAndGenerateCode();
+
+            if (!generatedCode) {
+                return
+            } else {
+                displayResults(generatedCode);
+            }
+        });
+    })
 
 }
 
 init();
+
+
+
+//const inputString = ` ((((PRIJS + ((double)#1#) +
+//(bestelPartij.Fustcode == "FB" ? ((double)#2#) : 
+//   (bestelPartij.Fustcode == "HB" ? ((double)#3#) : 
+//   (bestelPartij.Fustcode == "QB" ? ((double)#4#) : 
+//   (bestelPartij.Fustcode == "5B" ? ((double)#5#) :
+//   (bestelPartij.Fustcode == "8B" ? ((double)#6#) :
+//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust) + (PRIJS *((double)#7#)))*$4$)
+//+
+//((((double)#8#)+(((double)#9#)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))*$4$))*((double)#10#))
+
+// +
+//((double)#11#) +
+
+
+//(((double)#12#) + (((double)#13#)/((bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume)))) 
+
+//+
+//((((double)#14#)/(bestelPartij.Volume == 0 ? 1 : bestelPartij.Volume))+
+//(((bestelPartij.Fustcode == "FB" ? ((double)#15#) : 
+//   (bestelPartij.Fustcode == "HB" ? ((double)#16#) : 
+//   (bestelPartij.Fustcode == "QB" ? ((double)#17#) : 
+//   (bestelPartij.Fustcode == "5B" ? ((double)#18#) :
+//   (bestelPartij.Fustcode == "8B" ? ((double)#19#) :
+//   ((double)100))))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)))
+   
+//   +
+//(bestelPartij.Fustcode == "FB" ? ((double)#20#) : 
+//   (bestelPartij.Fustcode == "HB" ? ((double)#21#) : 
+//   (bestelPartij.Fustcode == "QB" ? ((double)#22#) : 
+//   (bestelPartij.Fustcode == "5B" ? ((double)#23#) :
+//   (bestelPartij.Fustcode == "8B" ? ((double)#24#) :
+//   ((double)100)))))) /(bestelPartij.InhFust == 0 ? 1 : bestelPartij.InhFust)
+//   console.log(total)
+//`
+
+//const input1 = document.getElementById('input1');
+//const input2 = document.getElementById('input2');
+//const input3 = document.getElementById('input3');
+
+//input1.value = `1	USD	94.34
+//2	GBP	100
+//4	USD	94.34
+//15	EUR	89.286
+//16	EUSD	86.6
+//99	USD	83.333
+//`
+
+//input2.value = `3	USD to GBP	0.943
+//4	GBP to GBP	1.000
+//5	EUR to GBP	0.892
+//6	Wreath/Capiro USD to GBP	0.833
+//7	USD to EUR	1.000
+//8	Transflor - FB	6.500
+//9	Transflor - HB	4.650
+//10	Transflor - QB	3.550
+//11	Transflor - 5B	3.550
+//12	Transflor - 8B	3.550
+//13	Transflor -Morrisons Alstro	2.000
+//14	Transflor - Capiro	2.750
+//15	Freight ECU	3.150
+//16	Freight COL	2.300
+//17	Peak Freight - ECU	3.950
+//18	Peak Freight - COL	2.700
+//19	Peak Freight - Ken	3.900
+//20	Inland Transport Ecu - FB	3.500
+//21	Inland Transport Ecu - HB	3.500
+//22	Inland Transport Ecu - QB	3.500
+//23	Inland Transport Col - FB	2.600
+//24	Inland Transport Col - HB	2.600
+//25	Inland Transport Col - QB	2.600
+//26	AM	1.010
+//27	Inland Transport Ken - FB	3.500
+//28	Inland Transport Ken - HB	1.750
+//29	Inland Transport Ken - QB	1.750
+//30	Freight Absolute - Ecu	0.005
+//31	Freight Absolute - Col	0.001
+//32	Freight Absolute - Ken	0.001
+//33	Duty Percentage	1.000
+//34	DEF/PEACH Absolute - Ecu	0.002
+//35	DEF/PEACH Absolute - Col	0.001
+//36	DEF/PEACH Absolute - Ken	0.003
+//37	Clearance Absolute - Ecu	0.002
+//38	Clearance Absolute - Col	0.002
+//39	Clearance Absolute - Ken	0.014
+//40	Clearance Per Kilo - Ecu	0.220
+//41	Clearance Per Kilo - Col	0.220
+//42	Clearance Per Kilo - Ken	0.220
+//43	Inland Transport Per Kilo - Ecu	0.001
+//44	Inland Transport Per Kilo - Col	0.050
+//45	Inland Transport Per Kilo - Ken
+//46	USD Rate for Wreaths & Capiro	0.833
+//47	Freight COL - Morrisons	2.100
+//48	Transflor Capiro -HB	3.500
+//49	Inland Capiro - HB	1.300
+//50	Inland Caprio - QB	1.300`
+
+//input3.value = `1	Supplier - absolute
+//2	Supplier - per full box
+//3	Supplier - per half box
+//4	Supplier - per quarter box
+//5	Supplier - per fifth box
+//6	Supplier - per eighth box
+//7	Supplier - percentage
+//8	Freight - absolute	0.005
+//9	Freight - per kilo	2.85
+//10	Duty - percentage	1
+//11	DEF/PEA - absolute	0.002
+//12	Clearance - absolute	0.002
+//13	Clearance - per kilo	0.215
+//14	Transport (INLD) - per kilo	0.001
+//15	Transport (INLD) - per full box	7.5
+//16	Transport (INLD) - per half box	3.75
+//17	Transport (INLD) - per quarter box	1.875
+//18	Transport (INLD) - per fifth box	1.125
+//19	Transport (INLD) - per eighth box	1.125
+//20	Transport (CUST) - per full box	6.25
+//21	Transport (CUST) - per half box	4.65
+//22	Transport (CUST) - per quarter box	3.55
+//23	Transport (CUST) - per fifth box	3.55
+//24	Transport (CUST) - per eighth box	3.55`
+
+
+//let newFinalString = inputString.replace(" ", "");
+
+//newFinalString = `const prijs = 0.13;
+//                            const volume = 36.585;
+//                            const inhust = 300;
+//                            const fustCode = "QB";
+//                            const florCal = 0.187;
+//                            const shipmentNo = "01430564472";
+//                            const fustaantal = 7;
+//                            const noOfBoxesRecieved = 7;
+//                            const stemsLeftToSell = 0;
+//                            const stemsNotRecieved = 0;
+//                            let total =` + newFinalString
+
+//const currencyCodeInput = input1.value.trim()
+//const generalCodeInput = input2.value.trim()
+//const formulaCodeInput = input3.value.trim()
+//const flowerTableInput = input4.value.trim()
+
+//const currencyCodeLines = parseData(currencyCodeInput);
+//const generalCodeLines = parseData(generalCodeInput);
+//const formulaCodeLines = parseData(formulaCodeInput);
+//const textReplacements = [
+//    ["PRIJS", "prijs"],
+//    ["bestelPartij.Fustcode", "fustCode"],
+//    ["bestelPartij.Volume", "volume"],
+//    ["bestelPartij.InhFust", "inhust"],
+//    ["(double)", ""]
+//]
+
+//textReplacements.forEach(variable => {
+//    newFinalString = newFinalString.replaceAll(variable[0], variable[1])
+//})
+
+//// Replace general codes
+//generalCodeLines.forEach(generalCode => {
+//    newFinalString = newFinalString.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
+//})
+
+//// Replace currency codes
+//currencyCodeLines.forEach(generalCode => {
+//    newFinalString = newFinalString.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2] / 100))
+//})
+
+//// Replace formula codes
+//formulaCodeLines.forEach(generalCode => {
+//    newFinalString = newFinalString.replaceAll("#" + (generalCode[0].trim()) + "#", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
+//})
+
+//console.log(newFinalString)
+
+//const results = new Function(newFinalString)();
+
+//console.log(results)

@@ -16,30 +16,75 @@
             padding: 10px;
             border: 1px solid #ccc;
         }
+
+        .inline-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 90%;
+        }
+
+            .inline-checkbox h4 {
+                margin: 0;
+            }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            float: right;
+        }
+
+            .checkbox-container label {
+                margin-right: 5px;
+            }
     </style>
 </head>
 <body>
     <h1>Price Formula Breaker</h1>
     <div class="flex-container">
         <div class="input-group">
-            <h4>Currency Code Table</h4>
+            <div class="inline-checkbox">
+                <h4>Currency Code Table</h4>
+                <div class="checkbox-container">
+                    <label for="checkbox1">Use default</label>
+                    <input type="checkbox" checked="checked" id="chkCurrencyCode" onclick="fillInputs()">
+                </div>
+            </div>
             <textarea id="input1" class="input-textarea" placeholder="Currency Code" rows="5" cols="60"></textarea>
         </div>
 
         <div class="input-group">
-            <h4>Order Line + Price Formula</h4>
+            <div class="inline-checkbox">
+                <h4>Order Line + Price Formula</h4>
+                <div class="checkbox-container" style="display: none;">
+                    <label for="checkbox4">Use default</label>
+                    <input type="checkbox" checked="checked" id="chkPriceFormula" onclick="fillInputs()">
+                </div>
+            </div>
             <textarea id="input4" class="input-textarea" placeholder="Order Line + Price Formula " rows="5" cols="60" required></textarea>
         </div>
     </div>
 
     <div class="flex-container">
         <div class="input-group">
-            <h4>General Code Table</h4>
+            <div class="inline-checkbox">
+                <h4>General Code Table</h4>
+                <div class="checkbox-container">
+                    <label for="checkbox2">Use default</label>
+                    <input type="checkbox" checked="checked" id="chkGeneralCode" onclick="fillInputs()">
+                </div>
+            </div>
             <textarea id="input2" class="input-textarea" placeholder="General Code" rows="5" cols="60"></textarea>
         </div>
 
         <div class="input-group">
-            <h4>Formula Code Table</h4>
+            <div class="inline-checkbox">
+                <h4>Formula Code Table</h4>
+                <div class="checkbox-container">
+                    <label for="checkbox3">Use default</label>
+                    <input type="checkbox" checked="checked" id="chkFormulaCode" onclick="fillInputs()">
+                </div>
+            </div>
             <textarea id="input3" class="input-textarea" placeholder="Formula Code" rows="5" cols="60"></textarea>
         </div>
     </div>
