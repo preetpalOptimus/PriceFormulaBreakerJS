@@ -9,10 +9,22 @@ const tableContent = [
         header: "Stem Purchase Price", keyName: "purchasePrice", currency: "£"
     },
     {
-        header: "Air Freight Total", keyName: "freightAbsolute", total: 0, total2: 0, currency: "£"
+        header: "Freight Absolute Cost", keyName: "freightAbsoluteCost", total: 0, total2: 0, currency: "£"
     },
     {
-        header: "Supplier Total = Total Purchase Price", keyName: "supplierAbsolute", total: 0, total2: 0, currency: "£"
+        header: "Freight Variable Cost", keyName: "freightVariableCostValue", total: 0, total2: 0, currency: "£"
+    },
+    {
+        header: "Volumetric Weight", keyName: "volPerKiloTotal", total: 0
+    },
+    {
+        header: "Rate Per Charge", keyName: "ratePerCharge", average: 0
+    },
+    {
+        header: "Air Freight Total", keyName: "freightTotal", total: 0, total2: 0, currency: "£"
+    },
+    {
+        header: "Supplier Total = Total Purchase Price", keyName: "supplierTotalValue", total: 0, total2: 0, currency: "£"
     },
     {
         header: "Air Freight Cost", keyName: "airFreightCost", total: 0, visible: false
@@ -39,7 +51,7 @@ const tableContent = [
         header: "Total Revenue", keyName: "total", total: 0, currency: "£"
     },
     {
-        header: "Florisoft Total Revenue", keyName: "florisoftTotal", total: 0, currency: "£"
+        header: "Florisoft Total Revenue", keyName: "florisoftTotalVar", total: 0, currency: "£"
     },
     {
         header: "Shipment No", keyName: "shipmentNo"
@@ -57,7 +69,7 @@ const tableContent = [
         header: "Stems Left To Sell", keyName: "stemsLeftToSell"
     },
     {
-        header: "Stems not recieved", keyName: "stemsNotRecieved"
+        header: "Stems not recieved", keyName: "stemsNotRecieved", total: 0
     },
     {
         header: "Volume", keyName: "volume"
@@ -77,30 +89,39 @@ function displayResults(code) {
     const tableContainer = document.getElementById('table-container');
     try {
         const results = new Function(code)();
-        console.log(results)
         // Calculate for total number of boxes
         const calculateTotal = results.map((line, index) => {
             line.noOfBoxesRecieved = line.stemsLeftToSell > 0 ? ((line.stemsLeftToSell + line.stemsNotRecieved) / line.boxContent) + line.noOfBoxesRecieved : line.noOfBoxesRecieved;
 
             line.number = index + 1;
 
-            const supplierAbsoluteVar = ((+line.supplierAbsolute * line.dutyPercentage) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
-            const freightAbsoluteVar = ((+line.freightAbsolute * line.dutyPercentage) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
-            const totalPurchasePriceVar = (line.purchasePrice * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(2)
-
+            const supplierTotalVar = ((+line.supplierTotal * line.dutyPercentage) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            const freightTotalVar = ((+line.freightTotal * line.dutyPercentage) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            const totalPurchasePriceVar = (line.purchasePrice * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(2);
 
             //line.airFreightCost = (+line.airFreightCost - line.purchasePrice).toFixed(3);
             //line.purchasePrice = (line.purchasePrice  * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
-            //line.airFreightCost = (((+line.freightAbsolute + +line.supplierAbsolute) * +line.dutyPercentage) *  (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            //line.airFreightCost = (((+line.freightAbsolute + +line.supplierTotal) * +line.dutyPercentage) *  (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
 
-            line.freightAbsolute = freightAbsoluteVar
-            line.supplierAbsolute = supplierAbsoluteVar
+            line.freightAbsoluteCost = ((+line.freightAbsoluteCost * line.freightCurrency) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3);
+            line.freightVariableCostValue = ((+line.freightVariableCost * line.freightCurrency) * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+
+            // Below is divided by freightCurrency to calcuate rate using dollars
+            const ratePerChargeVar = ((line.freightVariableCostValue / line.freightCurrency) / (+line.volPerKilo * +line.noOfBoxesRecieved))
+            line.ratePerCharge = ratePerChargeVar === +ratePerChargeVar ? ratePerChargeVar.toFixed(2) : 0
+
+            const volPerKiloTotalVar = (+line.volPerKilo * +line.noOfBoxesRecieved)
+            line.volPerKiloTotal = volPerKiloTotalVar != 0 ? volPerKiloTotalVar.toFixed(3) : volPerKiloTotalVar 
+            line.freightTotal = freightTotalVar
+            line.supplierTotalValue = supplierTotalVar
 
             line.clearanceCost = (+line.clearanceCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.defPeachAbsolute = (+line.defPeachAbsolute * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.inlandTransportCost = (+line.inlandTransportCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
-            line.total = (+line.total * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
-            line.florisoftTotal = (+line.florisoftTotal * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+            line.total = (+line.total * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3);
+
+            line.florisoftTotalVar = (+line.florisoftTotal * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
+
             line.transflorCost = (+line.transflorCost * (+line.noOfBoxesRecieved * +line.boxContent)).toFixed(3)
             line.totalStems = +line.noOfBoxesRecieved * +line.boxContent
             line.totalPurchasePrice = `${totalPurchasePriceVar}`
@@ -109,13 +130,16 @@ function displayResults(code) {
 
             return line
         })
+        console.log(results)
 
         const calculateTotalNew = JSON.parse(JSON.stringify(results))
 
         const newResults = calculateTotalNew.map(line => {
-            line.totalPurchasePrice = `£${(line.totalPurchasePrice * 0.833).toFixed(3)} \n\n $${line.totalPurchasePrice}`
-            line.supplierAbsolute = `£${line.supplierAbsolute} \n\n $${(line.supplierAbsolute / line.supplierCurrency).toFixed(3)}`
-            line.freightAbsolute = `£${line.freightAbsolute} \n\n $${(line.freightAbsolute / line.freightCurrency).toFixed(3)}`
+            line.totalPurchasePrice = `£${(line.totalPurchasePrice * line.supplierCurrency).toFixed(3)} \n\n $${line.totalPurchasePrice}`
+            line.supplierTotalValue = `£${line.supplierTotalValue} \n\n $${(line.supplierTotalValue / line.supplierCurrency).toFixed(3) }`
+            line.freightTotal = `£${line.freightTotal} \n\n $${(line.freightTotal / line.freightCurrency).toFixed(3) }`
+            line.freightAbsoluteCost = `£${line.freightAbsoluteCost} \n\n $${(line.freightAbsoluteCost / line.freightCurrency).toFixed(3) }`
+            line.freightVariableCostValue = `£${line.freightVariableCostValue} \n\n $${(line.freightVariableCostValue / line.freightCurrency).toFixed(3) }`
             return line
         })
 
@@ -126,6 +150,7 @@ function displayResults(code) {
         tableContainer.textContent = `Error: ${error.message}`;
     }
 
+    // Once table created, hide all hidden columns
     tableContent.forEach((cont, ind) => {
         if (cont.hasOwnProperty("visible")) {
             if (!cont.visible) {
@@ -169,11 +194,24 @@ function createTable(data) {
         content.total = +(content.total ? content.total : 0).toFixed(2)
     })
 
+    // Displays the average for each column
+    tableContent.forEach(content => {
+        if (content.hasOwnProperty("average")) {
+            let total = 0
+            let counter = 0
+            data.forEach(row => {
+                total += +row[content.keyName]
+                counter += (+row[content.keyName] != 0 ? 1 : 0)
+            })
+            content.average = (total / counter) != 0 ? (total / counter).toFixed(2) : 0
+        }
+    })
+
     // Displays the total for each column
     tableContent.forEach((cont, index) => {
         const cell = footerrRow.insertCell(index);
         const currency = cont.hasOwnProperty("currency") ? cont.currency : "";
-        const val1 = cont.total > 0 ? currency + cont.total : ''
+        const val1 = cont.total > 0 ? currency + cont.total : cont.hasOwnProperty("average") ? cont.average : ""
         const val2 = cont.hasOwnProperty('total2') ? ' \n\n $' + cont.total2.toFixed(2) : ''
         cell.outerHTML = `<th class='column${index}'> <span>${val1}</span> <span>${val2}</span> </th>`;
     });
@@ -205,11 +243,20 @@ function createTable(data) {
             cell.textContent = cellValue;
             cell.classList.add(`column${index}`);
 
-            if (column.keyName === "freightAbsolute") {
-                cell.title = item.freightCurrency
+            if (column.keyName.includes("freightTotal", "freightAbsoluteCost")) {
+                cell.title = `${item.currency[0].type} : ${item.currency[0].value}`
             }
-            if (column.keyName === "supplierAbsolute") {
-                cell.title = item.supplierCurrency
+            if (column.keyName === "freightVariableCostValue") {
+                cell.title = `${item.currency[0].type} : ${item.currency[0].value}`
+            }
+            if (column.keyName === "supplierTotal") {
+                cell.title = `${item.currency[1].type} : ${item.currency[1].value}`
+            }
+            if (column.keyName === "volPerKiloTotal") {
+                cell.title = `VolPerKilo : ${item.volPerKilo}`
+            }
+            if (column.keyName === "total") {
+                cell.title = `PricePerStem : ${item.florisoftTotal}`
             }
         });
     })
@@ -246,19 +293,22 @@ function processInputsAndGenerateCode() {
                             const fustaantal = #noOfBoxesOrdered;
                             const noOfBoxesRecieved = #noOfBoxesRecieved;
                             const stemsLeftToSell = #stemsLeftToSell;
-                            const stemsNotRecieved = #stemsNotRecieved;`
+                            const stemsNotRecieved = #stemsNotRecieved;
+                            const volPerKilo = #volPerKilo;`
 
         let mainObject = `let costBreakdown = {
                                 description: name,
                                 purchasePrice: prijs,
-                                freightAbsolute: section8.toFixed(3),
-                                supplierAbsolute: section7.toFixed(3),
-                                airFreightCost: section1.toFixed(3),
-                                dutyPercentage: section9.toFixed(3),
-                                defPeachAbsolute: section2.toFixed(3),
-                                clearanceCost: section3.toFixed(3),
-                                inlandTransportCost: section4.toFixed(3),
-                                transflorCost: section5.toFixed(3),
+                                freightTotal: section8,
+                                supplierTotal: section7,
+                                freightAbsoluteCost: section11,
+                                freightVariableCost: section12,
+                                airFreightCost: section1,
+                                dutyPercentage: section9,
+                                defPeachAbsolute: section2,
+                                clearanceCost: section3,
+                                inlandTransportCost: section4,
+                                transflorCost: section5,
                                 section6: section6,
                                 total: ((section1 + section2 + section3 + section4 + section5) * section6).toFixed(3),
                                 florisoftTotal: florCal,
@@ -269,8 +319,10 @@ function processInputsAndGenerateCode() {
                                 stemsLeftToSell: stemsLeftToSell,
                                 stemsNotRecieved: stemsNotRecieved,
                                 volume: volume,
-                                freightCurrency : 0.943,
-                                supplierCurrency: 0.833
+                                freightCurrency : freightCurr,
+                                supplierCurrency: supplierCurr,
+                                currency: currency,
+                                volPerKilo: volPerKilo
                             };
                             costBreakdowns.push(costBreakdown)`
 
@@ -388,14 +440,19 @@ function processInputsAndGenerateCode() {
 
             let newFinalString = result.finalString
             let result2 = createCSharpCodeSection(result.firstSection, true, result.maxCounter)
-            let firstSection = result2.finalString
+            let firstSection = result2.finalString;
 
-            //let currencyVars = findCurrencyCodesInFirstSection(firstSection)
-            //console.log(currencyVars)
-            
+            let result3 = createCSharpCodeSection(result2.secondSection, true, result2.maxCounter, true);
+            let freightSection = result3.finalString;
+
+            let currencyVars = findCurrencyCodesInFirstSection(firstSection)
+
+            const currency = []
+
             textReplacements.forEach(variable => {
                 newFinalString = newFinalString.replaceAll(variable[0], variable[1])
                 firstSection = firstSection.replaceAll(variable[0], variable[1])
+                freightSection = freightSection.replaceAll(variable[0], variable[1])
             })
             
             for (const [key, value] of Object.entries(orderLine)) {
@@ -405,40 +462,45 @@ function processInputsAndGenerateCode() {
             generalCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
                 firstSection = firstSection.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
+                freightSection = freightSection.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
 
-               //currencyVars.forEach((vars, index) => {
-               //     if (vars.includes("|" + (generalCode[0].trim()) + "|")) {
-               //         currencyVars[index] =  +(vars.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2]))
-                        
-               //     }
-               // })
+                currencyVars.forEach((vars, index) => {
+                    if  (vars.includes("|" + (generalCode[0].trim()) + "|")) {
+                        currencyVars[index] =  (vars.replaceAll("|" + (generalCode[0].trim()) + "|", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2]))
+                        currency.push({ type: generalCode[1], value: generalCode[2] })
+                    }
+                })
             })
 
             // Replace currency codes
             currencyCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2]/100))
                 firstSection = firstSection.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2] / 100))
+                freightSection = freightSection.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2] / 100))
 
-                //currencyVars.forEach((vars, index) => {
-                //    if (vars.includes("$" + (generalCode[0].trim()) + "$")) {
-                //        currencyVars[index] = +(vars.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2] / 100)))
-                //    }
-                //})
+                currencyVars.forEach((vars, index) => {
+                    if (vars.includes("$" + (generalCode[0].trim()) + "$")) {
+                        currencyVars[index] = (vars.replaceAll("$" + (generalCode[0].trim()) + "$", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : (generalCode[2] / 100)))
+                        currency.push({ type: generalCode[1], value: generalCode[2] })
+                    }
+                })
             })
 
             // Replace formula codes
             formulaCodeLines.forEach(generalCode => {
                 newFinalString = newFinalString.replaceAll("#" + (generalCode[0].trim()) + "#", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
                 firstSection = firstSection.replaceAll("#" + (generalCode[0].trim()) + "#", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
+                freightSection = freightSection.replaceAll("#" + (generalCode[0].trim()) + "#", (generalCode[2] === undefined ? '' : generalCode[2]) === '' ? 0 : generalCode[2])
             })
 
-            //orderVariables += `const supplierCurr = ${currencyVars[0]};`
-            //orderVariables += `const freightCurr = ${currencyVars[1]};`
+            orderVariables += `const supplierCurr = ${+currencyVars[0]};`
+            orderVariables += `const freightCurr = ${+currencyVars[1]};`
+            orderVariables += `const currency = ${JSON.stringify(currency)};`
 
             let functionName = `section${index}() `
             allFunctions += `function ${functionName}
                     {
-                                                ${orderVariables + newFinalString + firstSection + mainObject}
+                                                ${orderVariables + newFinalString + firstSection + freightSection + mainObject}
                     }`
 
             allFunctionNames += functionName + "; "
@@ -457,11 +519,7 @@ function processInputsAndGenerateCode() {
         `;
         console.log(generatedCode)
 
-        displayResults(generatedCode);
-
-    //} catch (error) {
-    //    console.log("Error: ", error.toString())
-    //}
+        return generatedCode;
 }
 
 
@@ -532,7 +590,7 @@ function findClosingParentheses(str) {
     return pairs;
 }
 
-function findRealSectionsOpenClose(str, second) {
+function findRealSectionsOpenClose(str, second, thirdNeeded) {
     let parenthesisPairs = findClosingParentheses(str);
     let sortedPairs = parenthesisPairs.sort((a, b) => a[0] - b[0]);
     let newStr;
@@ -549,20 +607,17 @@ function findRealSectionsOpenClose(str, second) {
     }
 
     let realPairs = [];
-
-    console.log(sortedPairs)
     
     if (second) {
 
 
-        if (sortedPairs[35]) {
+        if (sortedPairs[35] && !thirdNeeded) {
             realPairs.push(sortedPairs[2]);
             realPairs.push(sortedPairs[27]);
             realPairs.push(sortedPairs[35])
         } else {
-            realPairs.push(sortedPairs[1]);
-            realPairs.push(sortedPairs[26]);
-            realPairs.push([0,0])
+            realPairs.push(sortedPairs[2]);
+            realPairs.push(sortedPairs[4]);
         }
 
         return [realPairs, newStr]
@@ -582,20 +637,20 @@ function findRealSectionsOpenClose(str, second) {
     const r2 = realPairs.pop()
 
     realPairs.push([r2[0], r1[1]])
-    console.log(realPairs)
+    //console.log(realPairs)
     return [realPairs, newStr];
 }
 
-function createCSharpCodeSection(str, second, prevCounter) {
+function createCSharpCodeSection(str, second, prevCounter, thirdNeeded) {
 
-    const results = findRealSectionsOpenClose(str, second)
+    const results = findRealSectionsOpenClose(str, second, thirdNeeded)
     const realPairs = results[0];
     const newStr = results[1];
-    console.log(results)
 
     let result = {
         finalString: "",
         firstSection: "",
+        secondSection: "",
         maxCounter: 0
     }
 
@@ -612,13 +667,16 @@ function createCSharpCodeSection(str, second, prevCounter) {
         if (index === 0) {
             result.firstSection = section;
         }
+        if (index === 1) {
+            result.secondSection = section;
+        }
     })
     if (!second) {
         let lastSection = newStr.substring(firstPair[1] + 1, newStr.length);
         lastSection = lastSection.replace("*", "")
         result.finalString += " const section" + (counter + 1) + " = " + lastSection + "; ";
-        result.maxCounter = counter;
     }
+        result.maxCounter = counter;
     return result;
 }
 
@@ -660,9 +718,24 @@ function handleOrderInput(input) {
             noOfBoxesRecieved: line[9].trim(),
             stemsLeftToSell: line[10] === "" ? 0 : line[10] ? line[10] : 0,
             stemsNotRecieved: line[11] === "" ? 0 : line[11] ? line[11] : 0,
+            volPerKilo: line[12] === "" ? 0 : line[12] ? line[12] : 0,
         }
     })
 
     return final
 }
 //#endregion
+
+function init() {
+    const btnRun = document.getElementById("btnRun");
+
+    btnRun.addEventListener("click", () => {
+
+        const generatedCode = processInputsAndGenerateCode();
+
+        displayResults(generatedCode);
+    });
+
+}
+
+init();

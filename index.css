@@ -85,6 +85,11 @@ table {
     font-family: "Roboto Flex", sans-serif;
 }
 
+#table-container {
+    width: 100%;
+    /*overflow-x: scroll;*/
+}
+
 table, th, td {
     border: 1px solid #dddddd;
     font-weight: 400;
@@ -110,7 +115,7 @@ th {
     font-weight: 600;
 }
 
-td.column12 {
+td.column16 {
     background-color: lightblue;
     font-weight:600
 }
@@ -118,11 +123,11 @@ td.column12 {
     font-weight: 600;
 }
 
-.column3 {
+.column7 {
     border-left: 2px solid red;
 }
 
-.column10 {
+.column14 {
     border-right: 2px solid red;
 }
 
