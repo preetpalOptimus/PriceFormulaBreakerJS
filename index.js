@@ -1,15 +1,15 @@
-const tableContent = [
+const tableContentOld = [
     {
-        header: "", keyName: "number"
+        header: "", keyName: "number", styles: "font-weight: 600;"
     },
     {
-        header: "Description", keyName: "description"
+        header: "Description", keyName: "description", styles: "font-weight: 600;"
     },
     {
         header: "Stem Purchase Price", keyName: "purchasePrice", currency: "£"
     },
     {
-        header: "Freight Absolute Cost", keyName: "freightAbsoluteCost", total: 0, total2: 0, currency: "£"
+        header: "Freight Absolute Cost", keyName: "freightAbsoluteCost", total: 0, total2: 0, currency: "£", styles: "border-left: 3px solid red;"
     },
     {
         header: "Freight Variable Cost", keyName: "freightVariableCostValue", total: 0, total2: 0, currency: "£"
@@ -21,7 +21,7 @@ const tableContent = [
         header: "Rate Per Charge", keyName: "ratePerCharge", average: 0
     },
     {
-        header: "Air Freight Total", keyName: "freightTotal", total: 0, total2: 0, currency: "£"
+        header: "Air Freight Total", keyName: "freightTotal", total: 0, total2: 0, currency: "£", styles: "border-left: 3px solid red;"
     },
     {
         header: "Supplier Total = Total Purchase Price", keyName: "supplierTotalValue", total: 0, total2: 0, currency: "£"
@@ -33,49 +33,52 @@ const tableContent = [
         header: "dutyPercentage", keyName: "dutyPercentage", total: 0, visible: false
     },
     {
-        header: "DEF/PEACH Absolute", keyName: "defPeachAbsolute", total: 0, currency: "£"
+        header: "DEF/PEACH Absolute", keyName: "defPeachAbsolute", total: 0, currency: "£", visible: true
     },
     {
-        header: "Clearance Cost", keyName: "clearanceCost", total: 0, currency: "£"
+        header: "Clearance Cost", keyName: "clearanceCost", total: 0, currency: "£", visible: true
     },
     {
-        header: "Inland Transport Cost", keyName: "inlandTransportCost", total: 0, currency: "£"
+        header: "Inland Transport Cost", keyName: "inlandTransportCost", total: 0, currency: "£", visible: true
     },
     {
-        header: "Transflor Cost", keyName: "transflorCost", total: 0, currency: "£"
+        header: "Transflor Cost", keyName: "transflorCost", total: 0, currency: "£", styles: "border-right: 3px solid red;", visible: true
     },
     {
-        header: "*AM", keyName: "section6"
+        header: "*AM", keyName: "section6", visible: true
     },
     {
-        header: "Total Revenue", keyName: "totalVar", total: 0, currency: "£"
+        header: "Total Revenue", keyName: "totalVar", total: 0, currency: "£", styles: "background-color: lightblue; font-weight: 600", visible: true
     },
     {
-        header: "Florisoft Total Revenue", keyName: "florisoftTotalVar", total: 0, currency: "£"
+        header: "Florisoft Total Revenue", keyName: "florisoftTotalVar", total: 0, currency: "£", styles: "background-color: lightblue; font-weight: 600", visible: true
     },
     {
-        header: "Shipment No", keyName: "shipmentNo"
+        header: "Shipment No", keyName: "shipmentNo", visible: true
     },
     {
-        header: "No of boxes ordered", keyName: "noOfBoxesOrdered", total: 0
+        header: "No of boxes ordered", keyName: "noOfBoxesOrdered", total: 0, styles: "font-weight: 600;"
     },
     {
-        header: "No of boxes recieved", keyName: "noOfBoxesRecieved", total: 0
+        header: "No of boxes recieved", keyName: "noOfBoxesRecieved", total: 0, styles: "font-weight: 600;"
     },
     {
         header: "Box Content", keyName: "boxContent"
     },
     {
-        header: "Stems Left To Sell", keyName: "stemsLeftToSell"
+        header: "Stems Left To Sell", keyName: "stemsLeftToSell", total: 0
     },
     {
-        header: "Stems not recieved", keyName: "stemsNotRecieved", total: 0
+        header: "Credited Stems", keyName: "creditedStems", total: 0
     },
     {
         header: "Volume", keyName: "volume"
     },
     {
         header: "Total Stems Recieved", keyName: "totalStems", total: 0
+    },
+    {
+        header: "Supplier", keyName: "supplier", total: 0
     },
     {
         header: "Total Purchase Price (USD: 0.833)", keyName: "totalPurchasePrice", total: 0, total2: 0, currency: "£"
@@ -85,13 +88,15 @@ const tableContent = [
     }
 ]
 
-function displayResults(code) {
+function displayResults(code, tableContentOld) {
     const tableContainer = document.getElementById('table-container');
+    const tableContent = JSON.parse(JSON.stringify(tableContentOld))
+    tableContainer.textContent = "";
     try {
         const results = new Function(code)();
         // Calculate for total number of boxes
         const calculateTotal = results.map((line, index) => {
-            line.noOfBoxesRecieved = line.stemsLeftToSell > 0 ? ((line.stemsLeftToSell + line.stemsNotRecieved) / line.boxContent) + line.noOfBoxesRecieved : line.noOfBoxesRecieved;
+            line.noOfBoxesRecieved = +line.noOfBoxesOrdered != line.noOfBoxesRecieved ? ((Math.abs(+line.creditedStems) + line.stemsLeftToSell) / +line.boxContent) + +line.noOfBoxesRecieved : +line.noOfBoxesRecieved 
 
             line.number = index + 1;
 
@@ -145,7 +150,7 @@ function displayResults(code) {
             return line
         })
 
-        tableContainer.appendChild(createTable(newResults));
+        tableContainer.appendChild(createTable(newResults, tableContent));
 
         
     } catch (error) {
@@ -162,7 +167,7 @@ function displayResults(code) {
     })
 }
 
-function createTable(data) {
+function createTable(data, tableContent) {
     const table = document.createElement('table');
     table.id = "resultTable"
     table.border = '1';
@@ -245,22 +250,24 @@ function createTable(data) {
             cell.textContent = cellValue;
             cell.classList.add(`column${index}`);
 
-            if (["florisoftTotalVar", "totalVar"].includes(column.keyName)) {
-                if (+item.florisoftTotalVar === +item.totalVar) {
-                    cell.style.color = "green";
-                } else {
-                    cell.style.color = "red";
-                }
+
+            // Add CSS styles to the cell if the column has style prop
+            if (column.hasOwnProperty("styles")) {
+                cell.style.cssText = column.styles;
             }
 
+            // Make column color green or red if the values matches
+            highlight_same_columns(["florisoftTotalVar", "totalVar"], column.keyName, cell, item);
+            highlight_same_columns(["noOfBoxesOrdered", "noOfBoxesRecieved"], column.keyName, cell, item);
+
             // Add title tag to relevant cells using content
-            if (column.keyName.includes("freightTotal", "freightAbsoluteCost")) {
+            if (["freightTotal", "freightAbsoluteCost"].includes(column.keyName)) {
                 cell.title = `${item.currency[0].type} : ${item.currency[0].value}`
             }
             if (column.keyName === "freightVariableCostValue") {
                 cell.title = `${item.currency[0].type} : ${item.currency[0].value}`
             }
-            if (column.keyName === "supplierTotal") {
+            if (column.keyName === "supplierTotalValue") {
                 cell.title = `${item.currency[1].type} : ${item.currency[1].value}`
             }
             if (column.keyName === "volPerKiloTotal") {
@@ -276,6 +283,17 @@ function createTable(data) {
     })
 
     return table;
+}
+
+
+function highlight_same_columns(keysArray, columnKeyname, cell, item) {
+    if (keysArray.includes(columnKeyname)) {
+        if ((+item[keysArray[0]] === +item[keysArray[1]])) {
+            cell.style.color = "green";
+        } else {
+            cell.style.color = "red";
+        }
+    }
 }
 
 function show_hide_column(col_no, do_show) {
@@ -308,7 +326,9 @@ function processInputsAndGenerateCode() {
                             const noOfBoxesRecieved = #noOfBoxesRecieved;
                             const stemsLeftToSell = #stemsLeftToSell;
                             const stemsNotRecieved = #stemsNotRecieved;
-                            const volPerKilo = #volPerKilo;`
+                            const volPerKilo = #volPerKilo;
+                            const supplier = #supplier;
+                            const creditedStems = #creditedStems;`
 
         let mainObject = `let costBreakdown = {
                                 description: name,
@@ -336,7 +356,9 @@ function processInputsAndGenerateCode() {
                                 freightCurrency : freightCurr,
                                 supplierCurrency: supplierCurr,
                                 currency: currency,
-                                volPerKilo: volPerKilo
+                                volPerKilo: volPerKilo,
+                                supplier: supplier,
+                                creditedStems: creditedStems
                             };
                             costBreakdowns.push(costBreakdown)`
 
@@ -651,6 +673,8 @@ function handleOrderInput(input) {
             stemsLeftToSell: line[10] === "" ? 0 : line[10] ? line[10] : 0,
             stemsNotRecieved: line[11] === "" ? 0 : line[11] ? line[11] : 0,
             volPerKilo: line[12] === "" ? 0 : line[12] ? line[12] : 0,
+            supplier: `"${line[13].trim()}"`,
+            creditedStems: line[14] === "" ? 0 : line[14] ? line[14] : 0
         }
     })
 
@@ -779,7 +803,7 @@ function init() {
             if (!generatedCode) {
                 return
             } else {
-                displayResults(generatedCode);
+                displayResults(generatedCode, tableContentOld);
             }
         });
     })
